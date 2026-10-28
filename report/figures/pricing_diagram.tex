@@ -1,0 +1,11 @@
+\begin{tikzpicture}[
+ uml/.style={draw=accent,fill=pale,text width=3.7cm,align=center,minimum height=1.7cm,font=\footnotesize,inner sep=6pt},
+ inherit/.style={-{Triangle[open,length=3mm,width=3mm]},thick,draw=accent}]
+\node[uml] (base) at (0,0) {\textit{\textbf{FeeRule}}\\matches(entry, exit) = 0\\calculate() = 0\\virtual destructor};
+\node[uml] (day) at (-4.7,-3.2) {\textbf{DayFeeRule}\\matches() override\\calculate(): 3000};
+\node[uml] (night) at (0,-3.2) {\textbf{NightFeeRule}\\matches() override\\calculate(): 5000};
+\node[uml] (mixed) at (4.7,-3.2) {\textbf{MixedFeeRule}\\matches() override\\calculate(): 7000};
+\draw[inherit] (day.north) -- ++(0,0.65) -| (base.south);
+\draw[inherit] (night.north)--(base.south);
+\draw[inherit] (mixed.north) -- ++(0,0.65) -| (base.south);
+\end{tikzpicture}

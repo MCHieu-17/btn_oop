@@ -1,0 +1,70 @@
+\chapter{Ma trận kiểm thử và dữ liệu minh họa}
+\label{app:tests}
+
+\section{Kết quả kiểm thử C++}
+Các mã dưới đây tương ứng với tên ca trong chương trình kiểm thử. Mỗi dòng ghi điều cần kiểm tra; cột kết quả phản ánh lần chạy của bộ mã bàn giao. Các ca đầu cuối qua console được trình bày trong phần chính.
+
+\begingroup\small
+\begin{longtable}{p{0.85cm} p{11.9cm} p{1.2cm}}
+\caption{Ma trận đầy đủ của 35 ca kiểm thử}\label{tab:all-tests}\\
+\toprule Mã & Nội dung và kết quả mong đợi & Kết quả\\\midrule
+\endfirsthead
+\toprule Mã & Nội dung và kết quả mong đợi & Kết quả\\\midrule
+\endhead
+\bottomrule\endfoot
+T01 & Chấp nhận ngày hợp lệ và năm nhuận 2000, 2024. & Đạt\\
+T02 & Từ chối ngày không tồn tại, giờ và định dạng sai. & Đạt\\
+T03 & Chuẩn hóa thẻ/biển số; từ chối loại xe không hỗ trợ. & Đạt\\
+T04 & Vào 08:00, ra 17:00: phí 3.000 đồng. & Đạt\\
+T05 & Vào 18:00, ra 18:59: phí 3.000 đồng. & Đạt\\
+T06 & Vào 18:00, ra đúng 19:00: phí 7.000 đồng. & Đạt\\
+T07 & Vào đúng 19:00, ra 21:00: phí 5.000 đồng. & Đạt\\
+T08 & Vào 08:00, ra 21:00: phí 7.000 đồng. & Đạt\\
+T09 & Vào và ra cùng phút vẫn tính phí theo khung. & Đạt\\
+T10 & Không tự tính phí qua ngày; từ chối giờ ra trước giờ vào. & Đạt\\
+T11 & Mỗi cặp phút cùng ngày hợp lệ khớp đúng một quy tắc phí. & Đạt\\
+T12 & Hai loại xe cùng thời gian có cùng mức phí. & Đạt\\
+T13 & Nhận xe lưu dữ liệu và tăng mã lượt kế tiếp. & Đạt\\
+T14 & Thẻ đang dùng bị từ chối, không tiêu hao mã lượt. & Đạt\\
+T15 & Biển số trùng sau chuẩn hóa bị từ chối. & Đạt\\
+T16 & Bãi đầy không nhận thêm xe. & Đạt\\
+T17 & Báo lỗi thẻ không có lượt gửi, giờ ra không hợp lệ. & Đạt\\
+T18 & Xem báo giá không đóng lượt, thu tiền hoặc ghi tệp. & Đạt\\
+T19 & Xác nhận tính lại phí, ghi doanh thu, chặn trả lặp. & Đạt\\
+T20 & Dùng lại thẻ với mã lượt mới, chặn báo giá cũ. & Đạt\\
+T21 & Qua đêm bắt buộc có phí không âm và lý do. & Đạt\\
+T22 & Phí qua đêm ghi vào ngày ra, kể cả khi đổi tháng. & Đạt\\
+T23 & Sức chứa mới không dưới số xe; thay đổi hợp lệ được lưu. & Đạt\\
+T24 & Mở lại giữ xe đang gửi, lịch sử, sức chứa và mã kế tiếp. & Đạt\\
+T25 & Tiêu đề tệp hỏng bị từ chối, nội dung không bị ghi đè. & Đạt\\
+T26 & Từ chối tệp có phí cùng ngày sai biểu phí. & Đạt\\
+T27 & Từ chối hai lượt đang gửi dùng chung thẻ trong tệp. & Đạt\\
+T28 & Từ chối ngày sai và mã lượt kế tiếp không hợp lệ. & Đạt\\
+T29 & Lỗi ghi khi nhận xe: bộ nhớ và tệp cũ không đổi. & Đạt\\
+T30 & Lỗi ghi khi trả xe: xe còn trong bãi, doanh thu chưa có. & Đạt\\
+T31 & Thiếu tệp chính: đọc bản sao lưu và lưu lại được. & Đạt\\
+T32 & Tìm kiếm đã chuẩn hóa trả đủ các lượt lịch sử. & Đạt\\
+T33 & Không cho sửa phí thủ công của lượt cùng ngày. & Đạt\\
+T34 & Giữ đúng lý do tiếng Việt có dấu nháy/gạch chéo và phí 0. & Đạt\\
+T35 & Từ chối ngày thống kê sai; phát hiện tổng tiền tràn số. & Đạt\\
+\end{longtable}\endgroup
+
+\section{Dữ liệu kết thúc kịch bản console}
+Bảng sau tổng hợp bốn lượt của C01. Thời gian theo ngày 26 và 27/10/2026. Hai lần thống kê trong nhật ký diễn ra trước khi nhận lượt thứ tư.
+
+\begin{table}[H]
+\centering\small
+\caption{Các lượt được tạo trong kịch bản C01}
+\begin{tabularx}{\textwidth}{c l Y Y r}
+\toprule
+Lượt & Thẻ & Thời gian vào & Thời gian ra & Phí\\
+\midrule
+1 & C001 & 26/10, 08:00 & 26/10, 19:00 & 7.000\\
+2 & C001 & 26/10, 19:00 & 26/10, 21:00 & 5.000\\
+3 & C002 & 26/10, 18:00 & 27/10, 08:00 & 12.000\\
+4 & C003 & 27/10, 08:00 & Chưa ra & 0\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Để chạy lại toàn bộ kiểm tra trên Windows, dùng script \path{source_code/scripts/test.ps1}. Nhật ký C++ và console được tạo trong thư mục build. Các thư mục kiểm thử tạm được tạo riêng và dọn sau khi chạy; chúng không thay thế dữ liệu ở \path{data/} hoặc \path{demo_data/}.

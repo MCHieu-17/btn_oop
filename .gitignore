@@ -1,0 +1,15 @@
+source_code/build/
+source_code/data/*
+!source_code/data/.gitkeep
+source_code/demo_data/*
+!source_code/demo_data/.gitkeep
+report/.tools/
+report/build/
+report/.cache/
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.lof
+report/*.lot
+tmp/

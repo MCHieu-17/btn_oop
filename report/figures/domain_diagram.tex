@@ -1,0 +1,19 @@
+\begin{tikzpicture}[
+ uml/.style={draw=accent,rounded corners=2pt,fill=pale,text width=3.65cm,minimum height=1.65cm,align=left,font=\footnotesize,inner sep=6pt},
+ link/.style={-{Stealth[length=2.4mm]},draw=accent,thick}]
+\node[uml] (ui) at (0,0) {\textbf{ConsoleUI}\\service: ParkingService\&\\run(), receiveVehicle()};
+\node[uml] (service) at (5.1,0) {\textbf{ParkingService}\\lot, repository, calculator\\checkIn()\\confirmCheckout()};
+\node[uml] (repo) at (10.2,0) {\textbf{ParkingRepository}\\path: filesystem::path\\load(), save()};
+\node[uml] (calculator) at (0,-3) {\textbf{FeeCalculator}\\rules: các quy tắc phí\\calculate()};
+\node[uml] (lot) at (5.1,-3) {\textbf{ParkingLot}\\capacity, nextId, sessions\\recordEntry()\\recordExit()};
+\node[uml] (session) at (10.2,-3) {\textbf{ParkingSession}\\id, cardId, entry, exit, fee\\isActive(), close()};
+\node[uml] (time) at (5.1,-6) {\textbf{DateTime}\\year, month, day, hour, minute\\parse(), sameDate()};
+\node[uml] (vehicle) at (10.2,-6) {\textbf{Vehicle}\\plate, type\\normalizePlate()\\typeName()};
+\draw[link] (ui) -- (service);
+\draw[link] (service) -- (repo);
+\draw[link] (service) -- (lot);
+\draw[link] (service.south west) -- (calculator.north east);
+\draw[{Diamond[length=2.3mm]}-] (lot) -- node[pos=0.15,above,font=\scriptsize]{1} node[pos=0.85,above,font=\scriptsize]{0..*} (session);
+\draw[{Diamond[length=2.3mm]}-] (session) -- node[right,font=\scriptsize]{1} (vehicle);
+\draw[link,dashed] (session.south west) -- (time.north east);
+\end{tikzpicture}

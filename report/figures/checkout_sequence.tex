@@ -1,0 +1,14 @@
+\begin{tikzpicture}[font=\small]
+\foreach \x/\name in {0/Giao diện,3/Dịch vụ,6/Bãi xe,9/Tính phí,12/Lưu trữ}{
+\node[reportbox,text width=2cm,minimum height=0.7cm] at (\x,0) {\name};
+\draw[dashed,draw=rulegray] (\x,-0.5)--(\x,-7.2);}
+\draw[reportarrow] (0,-0.9)--node[above,fill=white,inner sep=1pt]{Tra thẻ}(3,-0.9);
+\draw[reportarrow] (3,-1.7)--node[above,fill=white,inner sep=1pt]{Tìm lượt}(6,-1.7);
+\draw[reportarrow] (3,-2.5)--node[above,fill=white,inner sep=1pt]{Tính phí cùng ngày}(9,-2.5);
+\draw[reportarrow,dashed] (3,-3.3)--node[above,fill=white,inner sep=1pt]{Báo giá}(0,-3.3);
+\node[align=left,fill=white,inner sep=2pt] at (1.4,-4.1) {Đối chiếu biển số\\Xác nhận thu tiền};
+\draw[reportarrow] (0,-4.9)--node[above,fill=white,inner sep=1pt]{Xác nhận}(3,-4.9);
+\draw[reportarrow] (3,-5.7)--node[above,fill=white,inner sep=1pt]{Lưu trạng thái dự kiến}(12,-5.7);
+\draw[reportarrow,dashed] (12,-6.3)--node[above,fill=white,inner sep=1pt]{Lưu thành công}(3,-6.3);
+\draw[reportarrow,dashed] (3,-6.9)--node[above,fill=white,inner sep=1pt]{Cho xe ra}(0,-6.9);
+\end{tikzpicture}

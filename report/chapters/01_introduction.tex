@@ -1,0 +1,49 @@
+\chapter{Mở đầu}
+\label{chap:introduction}
+
+\section{Bài toán được lựa chọn}
+Một sinh viên vào bãi, nhận thẻ rồi đến lớp. Khi ra về, sinh viên đưa lại thẻ, nhân viên kiểm tra xe và thu tiền. Nếu chỉ nhìn vào các thao tác tại cổng, quy trình khá đơn giản. Tuy nhiên, phía sau mỗi lần giao thẻ là một số thông tin cần đi cùng nhau: xe nào đang gửi, dùng thẻ nào, vào lúc nào và đã thanh toán hay chưa. Chỉ cần một thông tin bị ghi nhận sai, các bước sau sẽ khó kiểm tra lại.
+
+Đề tài đặt bài toán trong bối cảnh bãi xe sinh viên của Đại học Kinh tế Quốc dân, với đối tượng quản lý chính là xe máy và xe máy điện. Những quy tắc cụ thể về giá vé, mốc thời gian và thao tác nhân viên được giới hạn theo yêu cầu của bài tập. Đây là mô hình phần mềm phục vụ học phần, chưa phải kết quả khảo sát hoặc hệ thống được triển khai tại bãi xe của trường.
+
+Hai đặc điểm của bài toán ảnh hưởng trực tiếp đến thiết kế. Thứ nhất, một thẻ được dùng lại nhiều lần, trong khi lịch sử của từng lần gửi phải được giữ riêng. Thứ hai, mức phí không chỉ phụ thuộc vào thời điểm xe vào. Một xe vào trước 19:00 có thể trả 3.000 đồng nếu ra trước mốc này, nhưng phải trả 7.000 đồng nếu ra từ 19:00 cùng ngày. Chương trình cần ghi lại cả thời gian vào lẫn thời gian ra để quyết định đúng mức tiền.
+
+Một vấn đề khác xuất hiện khi nhân viên đang trả xe nhưng chưa xác nhận thu tiền. Màn hình có thể đã hiển thị mức phí, song xe vẫn chưa hoàn tất lượt gửi. Nếu chương trình giải phóng thẻ ngay khi tra cứu, thẻ có thể được dùng cho xe khác trong lúc giao dịch cũ chưa kết thúc. Vì vậy, thao tác xem phí và thao tác xác nhận trả xe phải được phân biệt ngay từ yêu cầu nghiệp vụ.
+
+\section{Mục tiêu của đề tài}
+Về sử dụng, chương trình cần giúp nhân viên theo dõi các xe còn trong bãi, nhận và trả đúng thẻ, tính tiền nhất quán và xem lại giao dịch sau khi đóng chương trình. Việc thao tác được tổ chức bằng menu console để nhóm có thể tập trung vào dữ liệu và quy trình xử lý. Các thiết bị như camera hoặc đầu đọc thẻ được thay bằng thao tác nhập, tránh để phần tích hợp phần cứng chiếm phần lớn khối lượng của bài tập.
+
+Về học phần, mục tiêu là chỉ ra mỗi nguyên lý hướng đối tượng giải quyết việc gì trong chương trình. Việc khai báo nhiều lớp chưa đủ để giải thích một thiết kế. Báo cáo cần làm rõ vì sao có lớp lượt gửi bên cạnh lớp xe, vì sao bộ tính phí sử dụng kế thừa, và vì sao một lỗi ghi tệp phải truyền về giao diện thay vì bị bỏ qua.
+
+\begin{table}[H]
+\centering\small
+\caption{Mục tiêu học phần và phần cài đặt dùng để minh họa}
+\label{tab:learning-goals}
+\begin{tabularx}{\textwidth}{l Y}
+\toprule
+Nội dung & Câu hỏi cần giải thích trong đề tài\\
+\midrule
+Yêu cầu phần mềm & Nhận/trả xe thành công khi nào; các trường hợp nào phải từ chối?\\
+Lớp và đối tượng & Xe, lượt gửi, bãi xe lưu thông tin gì và phối hợp ra sao?\\
+Kế thừa & Các quy tắc phí có phần chung và phần riêng như thế nào?\\
+Đa hình & Một lời gọi qua \code{FeeRule} chọn đúng mức phí bằng cách nào?\\
+Ngoại lệ & Lỗi được phát hiện ở đâu, bắt ở đâu và dữ liệu còn lại thế nào?\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Sản phẩm được xem là đạt mục tiêu khi thực hiện được toàn bộ một lượt gửi, dùng lại thẻ mà không mất lịch sử, mở lại chương trình vẫn thấy xe chưa ra, và xử lý được các lỗi đã nêu trong yêu cầu. Những điều kiện này cũng là cơ sở để xây dựng bộ kiểm thử thay vì chỉ kiểm tra chương trình có mở được menu hay không.
+
+\section{Phạm vi và các giả định}
+Nhân viên là người trực tiếp dùng phần mềm. Sinh viên tham gia quy trình giao nhận thẻ và thanh toán, nhưng không đăng nhập hoặc thao tác trên màn hình chương trình. Mã thẻ được nhập từ bàn phím để mô phỏng thao tác quẹt. Vì không có ảnh camera, biển số được nhập thủ công lúc nhận xe và hiển thị lại khi trả để nhân viên đối chiếu với xe thực tế.
+
+Phiên bản hiện tại dùng một máy và một phiên chương trình làm việc với cùng tệp dữ liệu. Mỗi thẻ chỉ gắn với một lượt đang gửi; một biển số cũng chỉ có một xe đang gửi tại một thời điểm. Chương trình chưa quản lý danh mục thẻ vật lý được cấp phát. Một mã thẻ hợp lệ về cú pháp và chưa được dùng trong bãi được xem là sẵn sàng cho thao tác nhận xe.
+
+Xe máy và xe máy điện có cùng biểu phí. Phí tự động chỉ áp dụng khi giờ vào và giờ ra thuộc cùng ngày lịch. Lượt qua ngày cần nhân viên nhập số tiền cùng lý do; chương trình lưu thông tin này để phân biệt với phí tự động. Các mức tiền là số nguyên VND, không có phần thập phân.
+
+Các chức năng nhận dạng ảnh, điều khiển cổng, thanh toán điện tử, vé tháng, xác thực tài khoản và đồng bộ nhiều cổng nằm ngoài phạm vi. Những giới hạn đó giúp xác định rõ điều mà kết quả kiểm thử có thể chứng minh: tính đúng của mô hình và quy trình trong bản console, không phải độ an toàn của một hệ thống bãi xe vận hành thực tế.
+
+\section{Cách tiếp cận và cấu trúc báo cáo}
+Nhóm tổ chức phần phân tích theo một lượt gửi hoàn chỉnh: từ lúc nhận thẻ, ghi nhận xe vào, tra cứu xe ra cho đến khi lưu phí đã thu. Từ các thông tin cần nhớ và các điều kiện cần kiểm tra, chương trình được tách thành mô hình dữ liệu, dịch vụ nghiệp vụ, bộ tính phí, lưu trữ và giao diện. Các tình huống như trùng thẻ, bãi đầy hoặc ghi tệp thất bại được đưa vào cùng quá trình phân tích, vì chúng ảnh hưởng đến thời điểm dữ liệu được phép thay đổi.
+
+Các chương tiếp theo lần lượt mô tả yêu cầu, lựa chọn lớp, cách áp dụng OOP và quá trình cài đặt. Phần kiểm thử theo dõi một số ca quan trọng đến trạng thái cuối cùng để đối chiếu thiết kế với hành vi chạy thật. Ma trận đầy đủ của 35 ca kiểm thử được đặt ở phụ lục; phần chính dành chỗ cho việc giải thích kết quả và các giới hạn còn lại.

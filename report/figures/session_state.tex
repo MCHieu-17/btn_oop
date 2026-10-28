@@ -1,0 +1,6 @@
+\begin{tikzpicture}
+\node[reportbox,text width=3.7cm,minimum height=1.3cm] (active) at (0,0) {\textbf{Đang gửi}\\Chưa có giờ ra};
+\node[reportbox,text width=3.7cm,minimum height=1.3cm] (closed) at (8.8,0) {\textbf{Đã trả}\\Có giờ ra và phí thực thu};
+\draw[reportarrow] (active.east)--node[above,align=center,font=\small,text width=4.1cm]{Xác nhận thu tiền\\và lưu thành công}(closed.west);
+\draw[reportarrow] (active.north) .. controls (-3,2.7) and (3,2.7) .. node[above,align=center,font=\small]{Xem phí / hủy / lưu thất bại}(active.north);
+\end{tikzpicture}

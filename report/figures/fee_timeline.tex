@@ -1,0 +1,17 @@
+\begin{tikzpicture}[x=0.7cm,y=1cm,font=\small]
+\draw[reportarrow] (0,0)--(16,0);
+\foreach \x in {1,10,11,12,14}{\draw (\x,0.1)--(\x,-0.1);}
+\node[below] at (1,-0.1) {08:00};
+\node[below] at (10,-0.65) {17:00};
+\node[below] at (11,-0.1) {18:00};
+\node[below] at (12,-0.65) {19:00};
+\node[below] at (14,-0.1) {21:00};
+\draw[dashed,draw=accent] (12,0.1)--(12,3.1);
+\node[above,align=center] at (12,3.1) {Mốc tính phí};
+\draw[line width=2pt,draw=accent] (1,2.4)--(10,2.4);
+\node[above] at (5.5,2.4) {08:00 đến 17:00: 3.000 đồng};
+\draw[line width=2pt,draw=accent] (11,1.5)--(12,1.5);
+\node[left] at (10.9,1.5) {18:00 đến 19:00: 7.000 đồng};
+\draw[line width=2pt,draw=accent] (12,0.7)--(14,0.7);
+\node[left] at (11.8,0.7) {19:00 đến 21:00: 5.000 đồng};
+\end{tikzpicture}

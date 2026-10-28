@@ -1,0 +1,106 @@
+\chapter{Vận dụng lập trình hướng đối tượng}
+\label{chap:oop}
+
+\section{Đóng gói: giữ đối tượng ở trạng thái hợp lệ}
+Một biển số được nhập từ bàn phím có thể có dấu chấm, dấu gạch hoặc chữ thường. Nếu mỗi nơi tự chuẩn hóa theo một cách, việc so trùng sẽ không còn đáng tin. Vì vậy, \code{Vehicle} thực hiện chuẩn hóa trong hàm tạo. Khi một đối tượng xe đã tồn tại, các lớp còn lại có thể dùng biển số của nó để so sánh mà không phải lặp lại toàn bộ kiểm tra ký tự.
+
+\CodeFile{code:vehicle}{Giao diện lớp Vehicle}{snippets/vehicle_class.h}
+
+Hai thuộc tính nằm ở vùng riêng. Giao diện được phép lấy biển số và loại xe, không được gán trực tiếp một chuỗi mới vào \code{plate\_}. Các phương thức đọc là \code{const}; điều này thể hiện rằng việc hiển thị loại xe hoặc lấy biển số không phải một thao tác chỉnh sửa dữ liệu.
+
+Đóng gói cũng áp dụng cho các thay đổi có nhiều thuộc tính liên quan. Khi trả xe, không thể chỉ đặt giờ ra rồi để phí được cập nhật ở một lựa chọn menu khác. \code{ParkingSession::close()} nhận các thông tin cần thiết, kiểm tra điều kiện rồi mới lưu chúng. Một lượt đã kết thúc không được đóng lần nữa; phí âm hoặc giờ ra trước giờ vào đều bị từ chối.
+
+\CodeFile{code:session-close}{Kiểm tra và kết thúc một lượt gửi}{snippets/session_close.cpp}
+
+Đáng chú ý là cờ thu phí thủ công phải phù hợp với việc có qua ngày hay không. Chỉ gán một số tiền dương chưa đủ để hợp lệ: một lượt cùng ngày có cờ thủ công là sai quy tắc, còn lượt qua ngày thiếu lý do cũng chưa được chấp nhận. Những kiểm tra này nằm cùng thao tác đóng lượt để không phụ thuộc nhân viên đã đi qua menu nào.
+
+Các setter rời rạc như \code{setExit()}, \code{setFee()} hay \code{setClosed()} sẽ khiến phía gọi phải tự nhớ thứ tự và điều kiện. Thiết kế hiện tại dùng một thao tác mang ý nghĩa nghiệp vụ để gom trách nhiệm đó về lớp lượt gửi. Ở cấp toàn bãi, \code{recordEntry()} và \code{changeCapacity()} cũng thực hiện cùng cách tiếp cận với thẻ, biển số và sức chứa.
+
+\section{Kế thừa tại các quy tắc tính phí}
+Ba trường hợp phí đều cần trả lời hai câu hỏi: quy tắc có áp dụng cho cặp thời gian này không, và nếu có thì thu bao nhiêu. Phần giống nhau đó trở thành giao diện \code{FeeRule}. Mỗi lớp con tự xác định điều kiện phù hợp và mức tiền của mình.
+
+\CodeFile{code:fee-interface}{Lớp cha trừu tượng của các quy tắc phí}{snippets/fee_interface.h}
+
+Hai phương thức có \code{= 0} là thuần ảo, nên chương trình không tạo một quy tắc chung chưa có cách tính cụ thể. Các lớp \code{DayFeeRule}, \code{NightFeeRule} và \code{MixedFeeRule} cài đặt đầy đủ giao diện và dùng \code{override}. Nếu tên hoặc danh sách tham số không khớp, trình biên dịch có thể báo ngay thay vì âm thầm tạo một hàm khác.
+
+\begin{figure}[H]
+\centering
+\input{figures/pricing_diagram}
+\caption{Các lớp con cùng cung cấp giao diện kiểm tra và tính phí}
+\label{fig:pricing}
+\end{figure}
+
+Quy tắc ban ngày khớp khi lượt cùng ngày và giờ ra trước 19:00. Quy tắc buổi tối khớp khi giờ vào từ 19:00; vì thời gian ra không trước giờ vào nên xe cũng ra trong khung tối. Quy tắc kết hợp khớp khi vào trước 19:00 nhưng ra từ mốc đó. Mỗi lớp còn kiểm tra cùng ngày và thứ tự thời gian để điều kiện tự nó đã có nghĩa rõ ràng.
+
+Kế thừa ở đây diễn tả một quan hệ thay thế: một quy tắc ban ngày có thể được dùng ở nơi cần một \code{FeeRule}. Quan hệ này khác với việc bãi xe chứa các lượt gửi. Lượt gửi không phải một loại bãi xe, nên không kế thừa từ bãi. Việc chọn đúng loại quan hệ giúp sơ đồ lớp phản ánh công việc thực tế thay vì tạo một cây kế thừa chỉ để có nhiều tầng.
+
+Các mức phí hiện là hằng số, nên có thể cài đặt toàn bộ bằng một hàm điều kiện ngắn. Nhóm vẫn tách quy tắc để minh họa một điểm mở rộng có nội dung thực: khi cách chọn mức tiền thay đổi, lớp quy tắc chịu trách nhiệm cho điều kiện đó. Đổi lại, cách tổ chức này có nhiều lớp hơn. Với quy mô bài tập, sự đánh đổi được chấp nhận để làm rõ cơ chế kế thừa và đa hình, không phải để khẳng định mọi bảng giá đều cần mô hình tương tự.
+
+\section{Đa hình trong một lần tính tiền}
+\code{FeeCalculator} giữ một danh sách \code{unique\_ptr<FeeRule>}. Kiểu được nhìn thấy qua phần tử danh sách là giao diện lớp cha, còn đối tượng được tạo thực tế thuộc một trong ba lớp con. Vòng lặp không ép kiểu để gọi riêng từng lớp; nó gọi \code{matches()} và \code{calculate()} qua cùng giao diện.
+
+\CodeFile{code:calculator}{Khởi tạo đối tượng lớp con và gọi qua lớp cha}{snippets/fee_calculator.cpp}
+
+Xét lượt vào lúc 18:00 và ra lúc 19:00 ngày 26/10. Bộ tính phí kiểm tra thứ tự thời gian và cùng ngày trước khi duyệt quy tắc. Đối tượng ban ngày trả về không khớp vì giờ ra không còn trước 19:00. Đối tượng buổi tối không khớp vì giờ vào chưa đến 19:00. Đối tượng kết hợp khớp và phương thức \code{calculate()} của chính lớp đó trả về 7.000.
+
+\begin{table}[H]
+\centering\small
+\caption{Theo dõi các lời gọi cho lượt 18:00 đến 19:00}
+\label{tab:dispatch-trace}
+\begin{tabularx}{\textwidth}{l Y l}
+\toprule
+Đối tượng thực & Kết quả kiểm tra & Hành động tiếp theo\\
+\midrule
+\code{DayFeeRule} & Giờ ra không trước 19:00 & Bỏ qua\\
+\code{NightFeeRule} & Giờ vào trước 19:00 & Bỏ qua\\
+\code{MixedFeeRule} & Vào trước, ra từ 19:00 & Trả 7.000\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Nếu đổi giờ vào thành 19:00 và giờ ra thành 21:00, vẫn vòng lặp đó nhưng đối tượng buổi tối được chọn và trả về 5.000. Sự khác biệt nằm ở đối tượng lớp con xử lý lời gọi ảo. Đây là đa hình tại thời điểm chạy, không phải nạp chồng hàm dựa trên danh sách tham số.
+
+Các điều kiện phải không chồng lấn. Nếu hai lớp cùng khớp, kết quả sẽ phụ thuộc thứ tự trong danh sách. Nếu không lớp nào khớp một lượt cùng ngày hợp lệ, chương trình sẽ không tính được tiền. Vì vậy, kiểm thử không chỉ lấy ba ví dụ điển hình mà còn kiểm tra mọi cặp phút hợp lệ trong ngày. Vai trò của phép kiểm tra đó được trình bày cụ thể ở Chương~\ref{chap:evaluation}.
+
+Lượt qua ngày được kiểm tra trước và không đi vào việc chọn ba mức tự động. Dịch vụ yêu cầu phí thủ công cùng lý do thay vì để một quy tắc cùng ngày vô tình trả về mức tiền. Phân biệt ở ranh giới này giữ cho bộ tính phí chỉ trả lời những trường hợp đã có chính sách rõ ràng.
+
+\section{Ngoại lệ và đường đi của lỗi}
+Nhận xe có thể thất bại vì nhiều nguyên nhân. Thẻ đang dùng là xung đột dữ liệu; bãi đầy là giới hạn sức chứa; không mở được tệp là lỗi lưu trữ. Nếu tất cả chỉ trả về \code{false}, giao diện khó giải thích nên nhập lại thông tin hay kiểm tra việc lưu. Chương trình dùng các lớp ngoại lệ để mang loại lỗi và thông điệp đến nơi xử lý.
+
+\begin{table}[H]
+\centering\small
+\caption{Phân loại lỗi trong mô hình và lưu trữ}
+\label{tab:exceptions}
+\begin{tabularx}{\textwidth}{l Y Y}
+\toprule
+Ngoại lệ & Ví dụ phát sinh & Trạng thái cần giữ\\
+\midrule
+\code{ValidationException} & Ngày sai, phí âm, thiếu lý do & Không áp dụng dữ liệu sai.\\
+\code{NotFoundException} & Thẻ không có lượt đang gửi & Không đóng lượt khác.\\
+\code{ConflictException} & Trùng thẻ/xe hoặc báo giá cũ & Không tạo hoặc kết thúc nhầm lượt.\\
+\code{CapacityException} & Bãi đầy, giảm sức chứa quá mức & Giữ số xe và sức chứa cũ.\\
+\code{StorageException} & Không ghi được tệp hoặc tệp hỏng & Không báo giao dịch thành công.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Các lớp này kế thừa \code{ParkingException}; lớp gốc kế thừa \code{std::runtime\_error}. Đây là nhóm kế thừa thứ hai của chương trình. Giao diện có thể bắt chung theo tham chiếu lớp gốc mà vẫn nhận thông điệp của lỗi cụ thể qua \code{what()}. Bắt theo tham chiếu cũng tránh sao chép ngoại lệ thành một đối tượng chỉ còn phần lớp cha.
+
+\CodeFile{code:exceptions}{Lớp ngoại lệ gốc và các nhóm lỗi}{snippets/exceptions.h}
+
+Ví dụ, nhân viên nhận xe thứ hai bằng C001 trong khi thẻ đang gắn với một xe. \code{ParkingLot::recordEntry()} ném \code{ConflictException} trước khi thêm phần tử. Ngoại lệ truyền ra khỏi \code{checkIn()} đến vòng lặp giao diện. Nhánh bắt lỗi in thông điệp, sau đó menu xuất hiện lại. Không có lượt mới và mã lượt kế tiếp vẫn giữ nguyên.
+
+Một lỗi khác xảy ra sau khi đã tạo được trạng thái dự kiến: không ghi được tệp tạm. Lúc này mô hình dự kiến có xe mới, nhưng dịch vụ chưa thay thế bãi đang chạy. Ngoại lệ lưu trữ làm hàm giao dịch kết thúc trước bước áp dụng. Nhân viên nhận được lỗi; lần xem bãi tiếp theo vẫn thấy dữ liệu cũ. Hai lỗi phát sinh ở hai tầng khác nhau nhưng đều không được để lại một giao dịch thành công một phần.
+
+Hủy trả xe không được xem là ngoại lệ. Nhân viên có thể chủ động không xác nhận biển số hoặc thu tiền, nên giao diện dùng nhánh điều kiện để dừng thao tác. Ngoại lệ được dành cho dữ liệu và điều kiện không thỏa mãn, giúp ý nghĩa của các đường xử lý rõ hơn.
+
+\section{Quản lý tài nguyên và tính nhất quán}
+Các đối tượng quy tắc được quản lý bằng \code{unique\_ptr}, mỗi con trỏ sở hữu duy nhất một đối tượng. Khi bộ tính phí bị hủy, tài nguyên của các quy tắc được giải phóng tự động. Hàm hủy của \code{FeeRule} là ảo để việc hủy qua kiểu lớp cha thực hiện đúng đối với lớp con. Chương trình không cần một vòng lặp \code{delete} tách rời ở cuối luồng chạy.
+
+Luồng tệp cũng được giữ trong các đối tượng có phạm vi sống rõ ràng. Tuy vậy, việc tự đóng tài nguyên khi ra khỏi phạm vi không thay cho kiểm tra ghi thành công. Lớp lưu trữ vẫn phải kiểm tra sau khi mở, ghi, đẩy dữ liệu và đóng tệp. Chỉ dựa vào việc không có ngoại lệ tự phát sẽ bỏ sót trường hợp luồng ghi đã chuyển sang trạng thái lỗi.
+
+\CodeFile{code:commit}{Lưu trạng thái dự kiến trước khi thay thế bãi đang chạy}{snippets/commit.cpp}
+
+Hàm \code{commit()} ngắn nhưng xác định thứ tự của giao dịch. Dữ liệu ứng dụng chỉ được thay sau khi \code{save()} trả về thành công. Nhận xe, trả xe và đổi sức chứa đều đi qua điểm này, nên không có ba cách lưu khác nhau trong ba lựa chọn menu.
+
+Đây là cách giữ nhất quán ở quy mô một phiên với dữ liệu nhỏ. Mỗi giao dịch phải sao chép bãi và ghi toàn bộ lịch sử, nên không phù hợp khi lịch sử tăng rất lớn. Báo cáo giữ cả lợi ích lẫn chi phí của lựa chọn này: dễ đọc, dễ thử lỗi và tránh cập nhật nửa chừng trong các tình huống đã mô phỏng, nhưng chưa có giao dịch đồng thời hay bảo đảm phục hồi như một cơ sở dữ liệu.

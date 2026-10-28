@@ -1,0 +1,105 @@
+\chapter{Thiết kế lớp và đối tượng}
+\label{chap:design}
+
+\section{Từ quy trình gửi xe đến mô hình lớp}
+Thông tin cần giữ sau một lần nhận xe gồm thẻ, phương tiện và thời điểm vào. Khi xe ra, chính lần gửi đó được bổ sung giờ ra và phí đã thu. Vì vậy, đối tượng trung tâm của mô hình là \code{ParkingSession}, tức một lượt gửi, thay vì chỉ là xe hoặc thẻ. Xe có thể quay lại nhiều lần; thẻ cũng được dùng lại; chỉ lượt gửi là đại diện cho một lần vào và ra cụ thể.
+
+\code{Vehicle} lưu những gì thuộc về phương tiện trong phạm vi đề tài: biển số và loại xe. \code{ParkingLot} giữ sức chứa, danh sách các lượt và mã lượt kế tiếp. Các lớp này mô tả dữ liệu cùng quy tắc hợp lệ của dữ liệu, không đọc bàn phím hoặc in menu. Khi cần thực hiện một công việc có nhiều bước, \code{ParkingService} phối hợp mô hình với bộ tính phí và lớp lưu trữ.
+
+Việc tách lớp theo trách nhiệm làm rõ nơi phải sửa khi yêu cầu thay đổi. Đổi câu hỏi xác nhận trên màn hình thuộc về giao diện; đổi mức phí thuộc về các quy tắc phí; đổi định dạng tệp thuộc về lớp lưu trữ. Một thay đổi nghiệp vụ như điều kiện nhận xe có thể liên quan đến mô hình và dịch vụ, nhưng không cần đặt rải rác trong từng lựa chọn menu.
+
+\begin{table}[H]
+\centering\small
+\caption{Các lớp chính và phần thông tin do lớp quản lý}
+\label{tab:classes}
+\begin{tabularx}{\textwidth}{l Y Y}
+\toprule
+Lớp & Thông tin chính & Trách nhiệm\\
+\midrule
+\code{Vehicle} & Biển số, loại xe & Chuẩn hóa và mô tả phương tiện.\\
+\code{ParkingSession} & Thẻ, xe, giờ vào/ra, phí & Bảo vệ tính hợp lệ của một lượt.\\
+\code{ParkingLot} & Sức chứa, lượt gửi, mã kế tiếp & Kiểm tra ràng buộc trên toàn bãi.\\
+\code{DateTime} & Ngày, tháng, năm, giờ, phút & Kiểm tra và so sánh thời điểm.\\
+\code{FeeCalculator} & Các đối tượng quy tắc phí & Tìm và gọi quy tắc phù hợp.\\
+\code{ParkingService} & Bãi, bộ tính phí, lưu trữ & Điều phối giao dịch và truy vấn.\\
+\code{ParkingRepository} & Đường dẫn tệp & Đọc, kiểm tra, ghi trạng thái bãi.\\
+\code{ConsoleUI} & Tham chiếu đến dịch vụ & Nhận dữ liệu, xác nhận và hiển thị.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Quan hệ giữa các lớp}
+Một bãi chứa nhiều lượt gửi, mỗi lượt chứa một đối tượng xe. Những đối tượng này được lưu theo giá trị. Khi lượt được sao chép sang trạng thái dự kiến để chuẩn bị giao dịch, thông tin xe và thời gian của lượt cũng được sao chép theo. Không có một danh sách xe chung mà mọi lượt cùng sửa; biển số và loại xe của một lượt lịch sử vẫn giữ nguyên sau khi lượt đó kết thúc.
+
+\begin{figure}[H]
+\centering
+\input{figures/domain_diagram}
+\caption{Sơ đồ các quan hệ chính; thuộc tính và phương thức được rút gọn}
+\label{fig:domain}
+\end{figure}
+
+\code{ParkingService} sở hữu bãi xe, lớp lưu trữ và bộ tính phí. \code{ConsoleUI} chỉ giữ một tham chiếu đến dịch vụ đã được tạo trong \code{main()}. Giao diện có thể xem bãi qua tham chiếu hằng, nhưng không nhận một danh sách có thể sửa trực tiếp. Nhờ đó, các lựa chọn tìm kiếm hoặc hiển thị không vô tình thay đổi số xe và phí đã thu.
+
+Một số kiểu dữ liệu được giữ ở mức đơn giản. \code{VehicleType} là \code{enum class} gồm xe máy và xe máy điện. Cả hai dùng cùng biểu phí và cùng quy trình nhận/trả, nên tách hai lớp con chỉ để đổi tên hiển thị chưa đem lại khác biệt hành vi cần thiết. Ngược lại, các trường hợp tính phí khác nhau thật sự về điều kiện áp dụng, nên được tổ chức thành một nhóm lớp kế thừa riêng.
+
+\section{Định danh: mã thẻ không phải mã lượt}
+Giả sử thẻ C001 được giao cho xe 29A1-12345 lúc 08:00 và nhận lại lúc 17:00. Đến 19:00, thẻ được giao cho một xe khác. Nếu dùng C001 làm khóa duy nhất của lịch sử, lần ghi thứ hai sẽ phải thay thế bản ghi cũ hoặc khiến chương trình khó chọn bản ghi cần trả. Thẻ vẫn là cùng một vật, nhưng hai khoản phí thuộc hai lần gửi khác nhau.
+
+Mô hình cấp một mã lượt tăng dần cho mỗi lần nhận. Mã thẻ là một thuộc tính của lượt, có thể lặp trong lịch sử nhưng không lặp giữa các lượt đang hoạt động. Khi tra trả xe, chương trình lọc lượt chưa có giờ ra và có mã thẻ phù hợp. Khi xem lịch sử, tất cả lượt của thẻ được trả về, phân biệt bằng mã lượt và thời gian.
+
+\begin{table}[H]
+\centering\small
+\caption{Ví dụ thẻ được dùng lại trong các lượt độc lập}
+\label{tab:card-reuse}
+\begin{tabularx}{\textwidth}{c l l Y r}
+\toprule
+Lượt & Thẻ & Biển số & Vào / ra ngày 26/10 & Phí\\
+\midrule
+1 & C001 & 29A112345 & 08:00 / 17:00 & 3.000\\
+2 & C001 & 29M99999 & 19:00 / 21:00 & 5.000\\
+3 & C002 & 29B188888 & 18:00 / chưa ra & 0\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Số 0 ở lượt đang gửi chỉ biểu thị chưa thu tiền, không có nghĩa là lượt được miễn phí. Việc phân biệt này được hỗ trợ bởi giờ ra tùy chọn và cờ phí thủ công, thay vì suy luận trạng thái chỉ từ số tiền. Một lượt qua đêm đã trả có thể có phí 0 nếu có lý do hợp lệ, còn một lượt đang gửi luôn chưa hoàn tất thu tiền.
+
+\section{Trạng thái của lượt và đối tượng báo giá}
+\code{ParkingSession} chỉ có hai trạng thái lưu trữ: đang gửi và đã trả. Trạng thái được suy ra từ việc có hay chưa có giờ ra. Cách biểu diễn này tránh lưu song song một cờ \code{paid} hoặc \code{closed} có thể không khớp với thời gian. Khi đóng lượt, giờ ra, phí và thông tin thu thủ công được kiểm tra rồi cập nhật cùng nhau.
+
+\begin{figure}[H]
+\centering
+\input{figures/session_state}
+\caption{Trạng thái lưu trữ của một lượt gửi}
+\label{fig:session-state}
+\end{figure}
+
+Xem báo giá không tạo trạng thái thứ ba trong tệp. Dịch vụ trả về \code{CheckoutQuote}, một đối tượng tạm để giao diện hiển thị. Đối tượng này có mã lượt, mã thẻ, biển số, giờ vào/ra, phí tùy chọn và dấu hiệu cần thu thủ công. Với lượt qua ngày, phí chưa có giá trị cho đến khi nhân viên nhập; với lượt cùng ngày, phí được tính ngay để xem trước.
+
+Khi xác nhận, dịch vụ không dùng riêng mã thẻ và số tiền từ báo giá. Nó tìm lại lượt hiện tại, kiểm tra định danh rồi tính lại phí. Điều này giữ sự phân biệt giữa dữ liệu dùng để trình bày và dữ liệu có quyền quyết định giao dịch. Trong bản một phiên, hai bước thường diễn ra liên tiếp, nhưng phép kiểm tra vẫn cần để tránh dùng lại một đối tượng báo giá đã cũ trong lời gọi nghiệp vụ.
+
+\section{Ràng buộc và giao diện nghiệp vụ}
+Ràng buộc được đặt ở nơi có đủ thông tin để kiểm tra. \code{Vehicle} biết cách chuẩn hóa biển số, nhưng không thể biết xe đã có trong bãi hay chưa. \code{ParkingSession} kiểm tra giờ ra và thông tin thu tiền, còn \code{ParkingLot} kiểm tra thẻ, biển số đang dùng và sức chứa. Dịch vụ kiểm tra sự phù hợp của báo giá với lượt hiện tại và điều phối việc lưu.
+
+\begin{table}[H]
+\centering\small
+\caption{Giao diện nghiệp vụ được giao diện console sử dụng}
+\label{tab:service-api}
+\begin{tabularx}{\textwidth}{l Y}
+\toprule
+Thao tác & Ý nghĩa\\
+\midrule
+\code{checkIn()} & Nhận dữ liệu, tạo lượt và chỉ trả mã lượt sau khi lưu được.\\
+\code{prepareCheckout()} & Kiểm tra thẻ, thời gian, tạo báo giá; không ghi tệp.\\
+\code{confirmCheckout()} & Kiểm tra lại lượt, xác định phí, lưu rồi áp dụng kết quả.\\
+\code{searchByCard()} & Tìm lịch sử chính xác theo mã thẻ chuẩn hóa.\\
+\code{searchByPlate()} & Tìm lịch sử chính xác theo biển số chuẩn hóa.\\
+\code{statistics()} & Đếm lượt và cộng doanh thu của ngày hợp lệ.\\
+\code{changeCapacity()} & Kiểm tra và lưu sức chứa mới.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Các thuộc tính quan trọng nằm trong vùng \code{private}; giao diện không có setter để tự gán số xe, phí hoặc trạng thái trả. Các phương thức đọc dùng \code{const} khi phù hợp. Điều này không chỉ là quy ước đặt từ khóa: nó giữ các thao tác chỉ đọc tách khỏi các thao tác phải kiểm tra và lưu dữ liệu.
+
+\code{ParkingLot} dùng một \code{vector} chứa cả lịch sử và các lượt đang gửi. Việc tra cứu hiện tại duyệt danh sách và lọc theo điều kiện; các tập mã dùng để phát hiện trùng khi khôi phục chỉ được tạo trong bước kiểm tra. Chương trình chưa duy trì thêm bảng chỉ mục phải đồng bộ sau mỗi giao dịch. Đổi lại, thời gian tìm kiếm và ghi dữ liệu tăng theo lịch sử, là giới hạn được đánh giá ở Chương~\ref{chap:evaluation}.

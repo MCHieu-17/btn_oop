@@ -1,0 +1,9 @@
+\begin{tikzpicture}
+\node[reportbox,text width=2.5cm,minimum height=1.4cm] (staff) at (0,0) {\textbf{Nhân viên}\\Nhập và xác nhận};
+\node[reportbox,text width=6.9cm] (transactions) at (7,1.6) {\textbf{Giao dịch}\\Nhận xe; tra phí; xác nhận trả xe};
+\node[reportbox,text width=6.9cm] (queries) at (7,0) {\textbf{Tra cứu}\\Xe đang gửi; tìm kiếm; lịch sử};
+\node[reportbox,text width=6.9cm] (management) at (7,-1.6) {\textbf{Quản lý}\\Thống kê ngày; thay đổi sức chứa};
+\draw[reportarrow] (staff.east) -- ++(0.7,0) |- (transactions.west);
+\draw[reportarrow] (staff.east)--(queries.west);
+\draw[reportarrow] (staff.east) -- ++(0.7,0) |- (management.west);
+\end{tikzpicture}

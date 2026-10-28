@@ -1,0 +1,9 @@
+\begin{tikzpicture}[node distance=0.35cm]
+\node[reportbox,text width=11.6cm] (write) {Ghi trạng thái dự kiến vào tệp .tmp};
+\node[reportbox,text width=11.6cm,below=of write] (flush) {Kiểm tra ghi, đẩy dữ liệu và đóng tệp};
+\node[reportbox,text width=11.6cm,below=of flush] (backup) {Nếu có tệp chính: đổi tên thành .bak};
+\node[reportbox,text width=11.6cm,below=of backup] (replace) {Đổi .tmp thành tệp chính};
+\node[reportbox,text width=11.6cm,below=of replace] (finish) {Thành công: áp dụng trạng thái; dọn bản sao lưu};
+\foreach \a/\b in {write/flush,flush/backup,backup/replace,replace/finish}{\draw[reportarrow] (\a)--(\b);}
+\node[below=0.25cm of finish,text width=12cm,align=center,font=\small] {Nếu thay thế thất bại: cố khôi phục .bak.\\Nếu thiếu tệp chính khi khởi động: có thể đọc .bak.};
+\end{tikzpicture}

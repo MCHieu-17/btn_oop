@@ -1,0 +1,9 @@
+\begin{tikzpicture}[node distance=0.35cm]
+\node[reportbox,text width=11.4cm] (input) {Nhập thẻ, biển số, loại xe và lấy thời gian vào};
+\node[reportbox,text width=11.4cm,below=of input] (vehicle) {Tạo Vehicle, chuẩn hóa và kiểm tra dữ liệu};
+\node[reportbox,text width=11.4cm,below=of vehicle] (copy) {Tạo bản dự kiến của ParkingLot};
+\node[reportbox,text width=11.4cm,below=of copy] (check) {Kiểm tra thẻ, biển số đang gửi và sức chứa};
+\node[reportbox,text width=11.4cm,below=of check] (save) {Tạo lượt, lưu bản dự kiến qua ParkingRepository};
+\node[reportbox,text width=11.4cm,below=of save] (done) {Lưu được: áp dụng vào bộ nhớ, báo nhận xe thành công};
+\foreach \a/\b in {input/vehicle,vehicle/copy,copy/check,check/save,save/done}{\draw[reportarrow] (\a)--(\b);}
+\end{tikzpicture}

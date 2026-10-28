@@ -1,0 +1,122 @@
+\chapter{Yêu cầu phần mềm và nghiệp vụ}
+\label{chap:requirements}
+
+\section{Người sử dụng và các nhóm chức năng}
+Người dùng trực tiếp là nhân viên trông xe. Nhân viên nhập mã thẻ, biển số, xác nhận việc thu tiền và xem thông tin quản lý. Sinh viên không có tài khoản trong hệ thống; phần mềm chỉ ghi nhận phương tiện và lượt gửi. Cách xác định này giúp tránh đưa thêm các lớp hồ sơ sinh viên hoặc đăng nhập trong khi các chức năng hiện tại chưa cần đến chúng.
+
+Hệ thống có ba nhóm công việc. Nhóm giao dịch gồm nhận và trả xe, làm thay đổi số xe trong bãi. Nhóm tra cứu gồm xem xe đang gửi, tìm kiếm và lịch sử, chỉ đọc dữ liệu. Nhóm quản lý gồm thống kê theo ngày và thay đổi sức chứa. Khi khởi động, chương trình đọc lại dữ liệu đã lưu; chỉ khi chưa có dữ liệu mới hỏi sức chứa ban đầu.
+
+\begin{figure}[H]
+\centering
+\input{figures/use_cases}
+\caption{Các nhóm thao tác của nhân viên trong phạm vi hệ thống}
+\label{fig:use-cases}
+\end{figure}
+
+\begin{table}[H]
+\centering\small
+\caption{Danh sách yêu cầu chức năng}
+\label{tab:functions}
+\begin{tabularx}{\textwidth}{l l Y}
+\toprule
+Mã & Chức năng & Kết quả cần đạt\\
+\midrule
+F01 & Khởi tạo & Tạo bãi có sức chứa hợp lệ khi chưa có dữ liệu.\\
+F02 & Nhận xe & Ghi thẻ, xe, giờ vào; kiểm tra trùng và chỗ trống.\\
+F03 & Trả xe & Tra lượt, đối chiếu, tính phí, xác nhận và lưu kết quả.\\
+F04 & Xe đang gửi & Hiển thị xe còn trong bãi, số xe và số chỗ trống.\\
+F05 & Tìm kiếm & Tìm các lượt theo mã thẻ hoặc biển số đã chuẩn hóa.\\
+F06 & Lịch sử & Xem cả lượt đang gửi và đã trả, phí và lý do thủ công.\\
+F07 & Thống kê & Đếm lượt vào/ra và doanh thu theo ngày.\\
+F08 & Sức chứa & Lưu sức chứa mới không nhỏ hơn số xe đang gửi.\\
+F09 & Khôi phục & Đọc lại lịch sử, lượt còn mở và mã lượt kế tiếp.\\
+F10 & Demo & Nhập thời gian để trình diễn, sử dụng dữ liệu riêng.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Nhận xe: dữ liệu và điều kiện chấp nhận}
+Một thao tác nhận xe bắt đầu bằng mã thẻ, biển số và loại xe. Thời gian vào được lấy từ đồng hồ máy trong chế độ thường, hoặc do người trình diễn nhập trong chế độ demo. Nhân viên không cần cung cấp mã lượt; chương trình tự cấp mã mới khi tạo giao dịch.
+
+Trước khi nhận, mã thẻ được bỏ khoảng trắng hai đầu và đổi sang chữ hoa. Biển số được đổi sang chữ hoa, bỏ khoảng trắng, dấu chấm và dấu gạch để so sánh. Nhờ vậy, nhập \code{29A1-123.45} hay \code{29a1 12345} không tạo thành hai phương tiện khác nhau. Bản mô phỏng kiểm tra ký tự và độ dài, chưa xác nhận biển số đó có được cấp ngoài thực tế hay không.
+
+Thao tác chỉ được chấp nhận nếu thẻ chưa gắn với xe đang gửi, biển số chưa có trong bãi và số xe chưa đạt sức chứa. Các điều kiện này độc lập: còn chỗ không có nghĩa là được nhận bằng thẻ đang sử dụng. Ngược lại, một thẻ rảnh cũng không cho phép nhận thêm xe khi bãi đã đầy.
+
+\begin{table}[H]
+\centering\small
+\caption{Đặc tả thao tác nhận xe}
+\label{tab:checkin-spec}
+\begin{tabularx}{\textwidth}{l Y}
+\toprule
+Thành phần & Nội dung\\
+\midrule
+Đầu vào & Mã thẻ, biển số, loại xe, thời gian vào.\\
+Tiền điều kiện & Dữ liệu hợp lệ; thẻ và biển số chưa có lượt đang gửi; còn chỗ.\\
+Luồng chính & Chuẩn hóa, kiểm tra, cấp mã lượt, tạo lượt và lưu trạng thái dự kiến.\\
+Hậu điều kiện & Có thêm một lượt đang gửi; thẻ bận; số chỗ trống giảm một.\\
+Luồng lỗi & Báo lỗi và quay lại menu; không thêm lượt, không tiêu hao mã lượt.\\
+Hoàn tất & Chỉ thông báo giao thẻ cho sinh viên sau khi lưu thành công.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Ví dụ bãi có sức chứa 100 và đang giữ 99 xe. Nhận một xe bằng thẻ C001 làm số xe tăng lên 100 sau khi ghi tệp thành công. Nếu bước ghi không thành công, số xe vẫn là 99 và C001 chưa được xem là đã giao cho một lượt mới. Đặt điều kiện hoàn tất ở bước lưu giúp thông báo trên màn hình phù hợp với dữ liệu mà lần mở sau sẽ đọc được.
+
+\section{Trả xe và thời điểm ghi nhận thu tiền}
+Khi sinh viên trả thẻ, nhân viên nhập mã và hệ thống tìm lượt đang hoạt động của thẻ đó. Các lượt đã kết thúc có cùng mã thẻ vẫn được giữ trong lịch sử nhưng không được chọn để trả lần nữa. Thời điểm ra được lấy lúc tra thẻ, trước các bước đối chiếu và thu tiền.
+
+Màn hình hiển thị biển số, loại xe, giờ vào, giờ ra và phí dự kiến. Nhân viên phải xác nhận biển số khớp xe thực tế. Nếu không khớp, thao tác dừng và dữ liệu giữ nguyên. Với lượt qua ngày, sau bước đối chiếu hệ thống yêu cầu số tiền và lý do. Cuối cùng, nhân viên xác nhận đã thu tiền để chương trình thực hiện đóng lượt.
+
+Hai câu hỏi xác nhận có mục đích khác nhau. Xác nhận biển số kiểm tra sự phù hợp giữa xe và thẻ; xác nhận thu tiền xác định thời điểm cho phép kết thúc giao dịch. Câu trả lời ở bước đầu không được dùng thay cho bước sau. Một báo giá đã hiện trên màn hình cũng không phải bằng chứng rằng khoản tiền đã được thu.
+
+\begin{figure}[H]
+\centering
+\input{figures/checkout_flow}
+\caption{Quy trình trả xe với hai bước xác nhận của nhân viên}
+\label{fig:checkout}
+\end{figure}
+
+Nếu nhân viên hủy sau khi xem phí, xe vẫn được tính vào số xe đang gửi. Khi quẹt lại thẻ, chương trình lấy thời gian mới và tính lại. Vì vậy, một lần xem lúc 18:59 có thể cho mức 3.000 đồng, nhưng lần quẹt tiếp theo lúc 19:00 sẽ chuyển sang 7.000 đồng nếu xe vào trước 19:00. Việc giữ nguyên báo giá cũ sau khi hủy sẽ làm sai quy tắc này.
+
+Ở bước xác nhận, dịch vụ tìm lại lượt hiện tại và đối chiếu mã lượt, biển số, giờ vào với báo giá. Đây là cách ngăn một báo giá của lượt trước được áp dụng nhầm sau khi thẻ đã được tái sử dụng. Nếu kiểm tra hoặc lưu tệp thất bại, lượt hiện tại vẫn chưa đóng và chương trình chưa ghi nhận doanh thu.
+
+\section{Biểu phí và các trường hợp biên}
+Biểu phí tự động được xét trên một lượt có thời gian vào và ra thuộc cùng ngày. Mốc phân chia là 19:00. Cụm từ ban ngày trong thiết kế chỉ nhóm quy tắc trước mốc này; chương trình chưa mô hình hóa lịch đóng, mở cổng theo từng ngày.
+
+\begin{table}[H]
+\centering\small
+\caption{Điều kiện lựa chọn mức phí cho xe máy và xe máy điện}
+\label{tab:fees}
+\begin{tabularx}{\textwidth}{Y Y r}
+\toprule
+Giờ vào & Giờ ra & Phí (VND)\\
+\midrule
+Trước 19:00 & Trước 19:00, cùng ngày & 3.000\\
+Từ 19:00 & Không trước giờ vào, cùng ngày & 5.000\\
+Trước 19:00 & Từ 19:00, cùng ngày & 7.000\\
+Bất kỳ giờ hợp lệ & Khác ngày vào & Nhập thủ công\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Giá tính theo lượt, không nhân số giờ và không tách riêng sáng, chiều. Một xe vào 08:00 và ra 17:00 trả 3.000 đồng. Xe vào 18:00, ra 19:00 trả 7.000 đồng. Xe vào đúng 19:00, ra 21:00 trả 5.000 đồng. Dấu bằng ở mốc 19:00 cần được thể hiện trong cả mã nguồn và kiểm thử vì đây là nơi hai cách hiểu dễ khác nhau.
+
+\begin{figure}[H]
+\centering
+\input{figures/fee_timeline}
+\caption{Ba lượt mẫu có cùng mốc phân chia 19:00}
+\label{fig:fee-timeline}
+\end{figure}
+
+Ngày được lưu theo ngày lịch, bắt đầu lúc 00:00. Nếu xe vào ngày 26 và ra ngày 27, hệ thống chuyển sang thu phí thủ công dù hai thời điểm chỉ cách nhau ít phút. Chương trình không tự cộng thêm một vé ngày hoặc tự nhân phí với số ngày. Nhân viên nhập số tiền nguyên không âm và lý do để lịch sử ghi lại cách xử lý của lượt đó.
+
+Giờ ra phải bằng hoặc sau giờ vào. Nếu bằng nhau, đây vẫn là một lượt gửi và áp dụng mức phí của khung tương ứng. Nếu giờ ra trước giờ vào, thao tác bị từ chối; chương trình không tự đảo thời gian hoặc suy đoán rằng xe đã qua đêm. Quy tắc này đặc biệt cần trong chế độ demo, nơi người nhập có thể gõ nhầm ngày.
+
+\section{Tra cứu, thống kê và chất lượng dữ liệu}
+Xe đang gửi là lượt chưa có giờ ra. Chỗ trống bằng sức chứa trừ số lượt này. Sức chứa mới không được nhỏ hơn số xe hiện tại và chỉ được áp dụng sau khi lưu thành công.
+
+Tra cứu so khớp chính xác sau chuẩn hóa và trả cả lịch sử. Một thẻ có thể có nhiều kết quả, nhưng tối đa một lượt đang gửi. Mã lượt giúp phân biệt những lần dùng lại thẻ.
+
+Thống kê đếm lượt vào theo ngày vào, lượt ra và doanh thu theo ngày ra. Xe qua đêm có lượt vào ở ngày trước, còn lượt ra và phí ở ngày sau. Lượt chưa trả hoặc báo giá bị hủy không tạo doanh thu.
+
+Các quan hệ trên phải được kiểm tra lại khi đọc tệp. Phần thiết kế tiếp theo xác định lớp chịu trách nhiệm bảo vệ từng điều kiện, kể cả khi dữ liệu bị sửa ngoài chương trình.

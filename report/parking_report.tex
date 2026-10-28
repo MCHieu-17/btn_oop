@@ -1,0 +1,31 @@
+\documentclass[12pt,a4paper,oneside]{extreport}
+\input{preamble}
+\input{metadata}
+\begin{document}
+\hypersetup{pageanchor=false}
+\input{chapters/00_frontmatter}
+\clearpage
+\tableofcontents
+\clearpage
+\chapter*{Danh mục hình và bảng}
+\markboth{Danh mục}{}
+\begingroup
+\fontsize{11}{13}\selectfont
+\section*{Danh mục hình}
+\makeatletter\begingroup\let\addvspace\@gobble\@starttoc{lof}\endgroup\makeatother
+\section*{Danh mục bảng}
+\makeatletter\begingroup\let\addvspace\@gobble\@starttoc{lot}\endgroup\makeatother
+\endgroup
+\clearpage
+\pagenumbering{arabic}
+\input{chapters/01_introduction}
+\input{chapters/02_requirements}
+\input{chapters/03_design}
+\input{chapters/04_oop}
+\input{chapters/05_implementation}
+\input{chapters/06_evaluation}
+\input{chapters/07_conclusion}
+\appendix
+\renewcommand{\chaptermark}[1]{\markboth{Phụ lục \thechapter}{}}
+\input{chapters/08_appendix}
+\end{document}
