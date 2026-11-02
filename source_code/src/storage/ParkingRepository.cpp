@@ -1,5 +1,6 @@
 #include "storage/ParkingRepository.h"
 #include "exceptions/ParkingException.h"
+#include "models/LostTicketInfo.h"
 #include "pricing/FeeCalculator.h"
 #include <fstream>
 #include <iomanip>
@@ -38,11 +39,11 @@ ParkingLot ParkingRepository::load() const {
     try {
         if (!std::getline(input, line)) throw ValidationException("Thiếu dòng tiêu đề.");
         std::istringstream header(line);
-        std::string version;
+        std::string tag;
         int capacity;
         long long nextId;
-        if (!(header >> version >> capacity >> nextId) || version != "PARKING_DATA_V1") {
-            throw ValidationException("Sai phiên bản hoặc cấu trúc tiêu đề.");
+        if (!(header >> tag >> capacity >> nextId) || tag != "PARKING_DATA") {
+            throw ValidationException("Sai cấu trúc tiêu đề.");
         }
         header >> std::ws;
         if (!header.eof()) throw ValidationException("Tiêu đề có dữ liệu dư.");
@@ -61,15 +62,34 @@ ParkingLot ParkingRepository::load() const {
                       >> manual >> std::quoted(reason))) {
                 throw ValidationException("Thiếu trường hoặc trường có kiểu dữ liệu sai.");
             }
+            int lostFlag = 0;
+            std::string studentId, studentName, ownerName, ownerId, className, phone, note;
+            if (!(row >> lostFlag >> std::quoted(studentId) >> std::quoted(studentName)
+                      >> std::quoted(ownerName) >> std::quoted(ownerId)
+                      >> std::quoted(className) >> std::quoted(phone) >> std::quoted(note))) {
+                throw ValidationException("Thiếu trường thông tin mất thẻ.");
+            }
             row >> std::ws;
-            if (!row.eof() || (manual != 0 && manual != 1)) {
-                throw ValidationException("Dòng có dữ liệu dư hoặc cờ phí sai.");
+            if (!row.eof() || (manual != 0 && manual != 1) ||
+                (lostFlag != 0 && lostFlag != 1)) {
+                throw ValidationException("Dòng có dữ liệu dư hoặc cờ phí/mất thẻ sai.");
             }
             const auto entry = DateTime::parse(entryText);
             std::optional<DateTime> exit;
             if (exitText != "-") exit = DateTime::parse(exitText);
+            std::optional<LostTicketInfo> lostInfo;
+            if (lostFlag == 1) {
+                if (!exit) throw ValidationException("Lượt đang gửi không thể có thông tin mất thẻ.");
+                if (manual != 1) throw ValidationException("Lượt mất thẻ phải có phí thủ công.");
+                lostInfo = LostTicketInfo(studentId, studentName, ownerName, ownerId,
+                                          className, phone, note);
+            } else if (!studentId.empty() || !studentName.empty() || !ownerName.empty() ||
+                       !ownerId.empty() || !className.empty() || !phone.empty() ||
+                       !note.empty()) {
+                throw ValidationException("Lượt không mất thẻ không được có thông tin mất thẻ.");
+            }
             ParkingSession session(id, card, Vehicle(plate, static_cast<VehicleType>(type)),
-                                   entry, exit, fee, manual == 1, reason);
+                                   entry, exit, fee, manual == 1, reason, lostInfo);
             if (exit && !session.hasManualFee() && calculator.calculate(entry, *exit) != fee) {
                 throw ValidationException("Phí cùng ngày không khớp biểu phí.");
             }
@@ -94,7 +114,7 @@ void ParkingRepository::save(const ParkingLot& lot) const {
         }
         std::ofstream output(temporary, std::ios::binary | std::ios::trunc);
         if (!output) throw StorageException("Không tạo được tệp tạm để lưu dữ liệu.");
-        output << "PARKING_DATA_V1 " << lot.getCapacity() << ' ' << lot.getNextId() << '\n';
+        output << "PARKING_DATA " << lot.getCapacity() << ' ' << lot.getNextId() << '\n';
         for (const auto& session : lot.getSessions()) {
             output << session.getId() << ' ' << std::quoted(session.getCardId()) << ' '
                    << std::quoted(session.getVehicle().getPlate()) << ' '
@@ -102,7 +122,20 @@ void ParkingRepository::save(const ParkingLot& lot) const {
                    << std::quoted(session.getEntry().toString()) << ' '
                    << std::quoted(session.getExit() ? session.getExit()->toString() : "-") << ' '
                    << session.getPaidFee() << ' ' << (session.hasManualFee() ? 1 : 0) << ' '
-                   << std::quoted(session.getReason()) << '\n';
+                   << std::quoted(session.getReason());
+            if (session.hasLostTicket()) {
+                const auto& info = *session.getLostTicket();
+                output << " 1 " << std::quoted(info.getStudentId()) << ' '
+                       << std::quoted(info.getStudentName()) << ' '
+                       << std::quoted(info.getOwnerName()) << ' '
+                       << std::quoted(info.getOwnerId()) << ' '
+                       << std::quoted(info.getClassName()) << ' '
+                       << std::quoted(info.getPhone()) << ' '
+                       << std::quoted(info.getNote());
+            } else {
+                output << " 0 \"\" \"\" \"\" \"\" \"\" \"\" \"\"";
+            }
+            output << '\n';
         }
         output.flush();
         if (!output) throw StorageException("Không ghi đủ dữ liệu vào tệp tạm.");

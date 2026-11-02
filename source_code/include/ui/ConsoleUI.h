@@ -9,9 +9,11 @@ private:
     DateTime readTime(const std::string& label) const;
     void receiveVehicle();
     void releaseVehicle();
+    void lostTicket();
     void showActive() const;
     void search() const;
     void showHistory() const;
+    void showLostTickets() const;
     void showStatistics() const;
     void changeCapacity();
     static void printSession(const ParkingSession& session);

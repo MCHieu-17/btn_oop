@@ -2,34 +2,18 @@
 \label{chap:conclusion}
 
 \section{Mức đáp ứng mục tiêu}
-Đề tài đã mô hình hóa được một lượt gửi xe từ lúc nhận thẻ đến lúc thu tiền và giải phóng thẻ. Điểm quan trọng của kết quả không nằm ở số mục menu, mà ở sự liên kết giữa những dữ liệu dùng chung: một thẻ chỉ thuộc một lượt đang gửi, phí gắn với thời gian của chính lượt đó, lịch sử không mất khi thẻ được dùng lại và xe chưa ra vẫn được khôi phục sau khi mở lại chương trình.
+Đề tài đã mô hình hóa được một lượt gửi xe từ lúc nhận thẻ đến lúc thu tiền và trả thẻ. Kết quả chính nằm ở sự liên kết giữa những dữ liệu dùng chung: một thẻ chỉ thuộc một lượt đang gửi, phí gắn với thời gian của chính lượt đó, lịch sử không mất khi thẻ được dùng lại và xe chưa ra vẫn được khôi phục sau khi mở lại chương trình.
 
 Năm nội dung trọng tâm của học phần đều có phần cài đặt cụ thể. Yêu cầu được chuyển thành điều kiện trước và sau thao tác. Các lớp xe, lượt gửi, bãi và thời gian giữ những trách nhiệm khác nhau. Kế thừa và đa hình tập trung ở quy tắc phí; nhóm ngoại lệ phân biệt các nguyên nhân thất bại. Những đoạn mã trong báo cáo được lấy từ chương trình để việc giải thích có thể đối chiếu trực tiếp khi bảo vệ bài.
 
-Kết quả 35 ca C++ và bốn kịch bản console hỗ trợ các kết luận trong phạm vi đã thử. Đặc biệt, các ca hủy trả, báo giá cũ và lỗi ghi tệp kiểm tra được thời điểm dữ liệu được phép thay đổi. Chúng bổ sung cho kiểm thử mức tiền, vì một mức phí đúng vẫn chưa đủ nếu lượt bị kết thúc nhầm hoặc doanh thu được ghi trước khi xác nhận.
+Kết quả 45 ca C++ và sáu kịch bản console hỗ trợ các kết luận trong phạm vi đã thử. Đặc biệt, các ca hủy trả, báo giá cũ và lỗi ghi tệp kiểm tra được thời điểm dữ liệu được phép thay đổi. Chúng bổ sung cho kiểm thử mức tiền, vì một mức phí đúng vẫn chưa đủ nếu lượt bị kết thúc nhầm hoặc doanh thu được ghi trước khi xác nhận. Luồng mất thẻ bổ sung một đường tra cứu theo biển số, lưu thông tin sinh viên/chủ xe và thu phí thủ công; các ca T36--T45 xác nhận lượt vẫn đóng đúng và dữ liệu đọc lại đầy đủ.
 
 \section{Những lựa chọn cần cân nhắc khi mở rộng}
-Việc dùng tệp văn bản và sao chép trạng thái giúp nhóm dễ theo dõi giao dịch và tạo các tình huống lỗi có thể lặp lại. Tuy nhiên, toàn bộ lịch sử được duyệt và ghi lại sau mỗi thay đổi. Nếu yêu cầu sử dụng vượt khỏi quy mô bài tập, hạn chế này cần được xử lý ở lớp lưu trữ và cách tra cứu, thay vì chỉ thay giao diện console bằng một cửa sổ đồ họa.
+Cách lưu bằng tệp văn bản giúp nhóm dễ theo dõi giao dịch và tạo lại các tình huống lỗi, nhưng toàn bộ lịch sử phải được duyệt và ghi lại sau mỗi thay đổi. Nếu dùng với lượng dữ liệu lớn hơn, cần thay lớp lưu trữ và cách tra cứu trước khi nghĩ đến việc đổi giao diện.
 
-Các quy tắc qua đêm cũng cần được thống nhất trước khi tự động hóa. Bản hiện tại cho nhập phí có lý do vì đề bài mới chốt ba mức trong cùng ngày. Chuyển sang một công thức tự động khi chưa rõ chính sách sẽ làm phần mềm đưa ra một số tiền có vẻ chính xác nhưng không có căn cứ nghiệp vụ. Việc xác định quy tắc phải đi trước phần cài đặt.
+Quy tắc qua đêm cũng cần được thống nhất trước khi tự động hóa. Đề bài mới chốt ba mức phí trong cùng ngày, nên chương trình yêu cầu nhân viên nhập phí và lý do cho lượt qua ngày. Một công thức tự động chỉ nên được thêm khi chính sách đã rõ.
 
-Một trường hợp khác cần bổ sung là nhân viên đã nhận tiền nhưng việc lưu thất bại. Chương trình giữ lượt đang gửi để không mất dữ liệu, song khi vận hành thực tế còn cần cách xác nhận lại và đối soát khoản tiền đã cầm. Đây là vấn đề nằm ở cả quy trình con người lẫn trạng thái phần mềm; không thể giải quyết chỉ bằng thêm một thông báo lỗi.
+\section{Hướng phát triển}
+Trước mắt, nhóm cần thống nhất quy tắc qua đêm và cách xử lý khi lưu thất bại. Sau đó có thể bổ sung kho thẻ, tài khoản nhân viên và nhật ký thao tác. Khi quy mô tăng, lớp lưu trữ có thể chuyển sang cơ sở dữ liệu và hỗ trợ nhiều cổng; phần cứng như đầu đọc thẻ hay camera chỉ nên thêm sau khi quy trình nghiệp vụ đã ổn định.
 
-\section{Thứ tự phát triển đề xuất}
-\begin{table}[H]
-\centering\small
-\caption{Các hướng phát triển theo thứ tự ưu tiên}
-\label{tab:roadmap}
-\begin{tabularx}{\textwidth}{c Y Y}
-\toprule
-Ưu tiên & Nội dung & Điều cần làm rõ trước\\
-\midrule
-1 & Quy định qua đêm, mất thẻ và đối soát thu tiền & Chính sách thu và quyền xử lý ngoại lệ.\\
-2 & Kho thẻ, tài khoản nhân viên, nhật ký thao tác & Cách cấp thẻ, phân quyền và truy vết.\\
-3 & Cơ sở dữ liệu, chỉ mục và nhiều cổng & Giao dịch đồng thời, sao lưu, phục hồi.\\
-4 & Đầu đọc thẻ, camera và giao diện đồ họa & Giao tiếp thiết bị và quy trình tại cổng.\\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-Thứ tự này ưu tiên những điều quyết định tính đúng của giao dịch trước phần trình bày. Kiến trúc tách giao diện, dịch vụ và lưu trữ tạo điểm bắt đầu thuận tiện cho việc thay đổi, nhưng mỗi bước vẫn phải được kiểm thử lại theo yêu cầu mới. Trong phạm vi học phần, sản phẩm hiện tại đủ để trình diễn một quy trình có dữ liệu, có điều kiện lỗi và có các cơ chế OOP có thể giải thích rõ ràng.
+Kiến trúc tách giao diện, dịch vụ và lưu trữ tạo điểm bắt đầu thuận tiện cho các thay đổi này, nhưng mỗi bước vẫn phải được kiểm thử lại. Trong phạm vi học phần, sản phẩm hiện tại đủ để trình diễn một quy trình có dữ liệu, có điều kiện lỗi và có các cơ chế OOP có thể giải thích rõ ràng.

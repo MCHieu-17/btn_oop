@@ -25,6 +25,14 @@ void ParkingLot::validate() const {
                 throw ConflictException("Dữ liệu có thẻ hoặc biển số đang gửi bị trùng.");
             }
         }
+        if (session.hasLostTicket()) {
+            if (session.isActive()) {
+                throw ConflictException("Lượt đang gửi không thể có thông tin mất thẻ.");
+            }
+            if (!session.hasManualFee()) {
+                throw ConflictException("Lượt mất thẻ phải có phí thủ công.");
+            }
+        }
     }
     if (cards.size() > static_cast<std::size_t>(capacity_)) {
         throw CapacityException("Số xe đang gửi vượt sức chứa.");
@@ -45,6 +53,13 @@ const ParkingSession& ParkingLot::findActiveByCard(const std::string& cardId) co
         if (session.isActive() && session.getCardId() == normalized) return session;
     }
     throw NotFoundException("Không có lượt đang gửi ứng với thẻ này.");
+}
+const ParkingSession& ParkingLot::findActiveByPlate(const std::string& plate) const {
+    const auto normalized = Vehicle::normalizePlate(plate);
+    for (const auto& session : sessions_) {
+        if (session.isActive() && session.getVehicle().getPlate() == normalized) return session;
+    }
+    throw NotFoundException("Không có lượt đang gửi ứng với biển số này.");
 }
 long long ParkingLot::recordEntry(const std::string& cardId, const Vehicle& vehicle,
                                  const DateTime& entry) {
@@ -68,6 +83,16 @@ void ParkingLot::recordExit(long long id, const DateTime& exit, long long fee,
     for (auto& session : sessions_) {
         if (session.getId() == id) {
             session.close(exit, fee, manual, reason);
+            return;
+        }
+    }
+    throw NotFoundException("Không tìm thấy mã lượt gửi.");
+}
+void ParkingLot::recordLostTicketExit(long long id, const DateTime& exit, long long fee,
+                                      const LostTicketInfo& info, const std::string& reason) {
+    for (auto& session : sessions_) {
+        if (session.getId() == id) {
+            session.closeLostTicket(exit, fee, info, reason);
             return;
         }
     }

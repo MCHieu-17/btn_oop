@@ -7,7 +7,7 @@
 \node[box,below=of plate] (fee) {Tính phí tự động hoặc nhập phí qua đêm và lý do};
 \node[box,below=of fee] (confirm) {Nhân viên xác nhận đã thu tiền};
 \node[box,below=of confirm] (save) {Kiểm tra lại lượt, tạo trạng thái dự kiến và lưu tệp};
-\node[box,below=of save] (done) {Lưu thành công: áp dụng trạng thái, giải phóng thẻ/chỗ đỗ};
+\node[box,below=of save] (done) {Lưu thành công: áp dụng trạng thái, thẻ và chỗ đỗ được trả lại};
 \draw[link] (scan)--(quote);\draw[link] (quote)--(plate);\draw[link] (plate)--(fee);
 \draw[link] (fee)--(confirm);\draw[link] (confirm)--(save);\draw[link] (save)--(done);
 \end{tikzpicture}

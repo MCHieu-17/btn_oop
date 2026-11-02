@@ -18,6 +18,7 @@ Lớp & Thông tin chính & Trách nhiệm\\
 \midrule
 \code{Vehicle} & Biển số, loại xe & Chuẩn hóa và mô tả phương tiện.\\
 \code{ParkingSession} & Thẻ, xe, giờ vào/ra, phí & Bảo vệ tính hợp lệ của một lượt.\\
+\code{LostTicketInfo} & Mã SV/CCCD, họ tên SV, chủ xe, ghi chú & Kiểm tra thông tin khi mất thẻ.\\
 \code{ParkingLot} & Sức chứa, lượt gửi, mã kế tiếp & Kiểm tra ràng buộc trên toàn bãi.\\
 \code{DateTime} & Ngày, tháng, năm, giờ, phút & Kiểm tra và so sánh thời điểm.\\
 \code{FeeCalculator} & Các đối tượng quy tắc phí & Tìm và gọi quy tắc phù hợp.\\
@@ -29,7 +30,7 @@ Lớp & Thông tin chính & Trách nhiệm\\
 \end{table}
 
 \section{Quan hệ giữa các lớp}
-Một bãi chứa nhiều lượt gửi, mỗi lượt chứa một đối tượng xe. Những đối tượng này được lưu theo giá trị. Khi lượt được sao chép sang trạng thái dự kiến để chuẩn bị giao dịch, thông tin xe và thời gian của lượt cũng được sao chép theo. Không có một danh sách xe chung mà mọi lượt cùng sửa; biển số và loại xe của một lượt lịch sử vẫn giữ nguyên sau khi lượt đó kết thúc.
+Một bãi chứa nhiều lượt gửi, mỗi lượt chứa một đối tượng xe. Những đối tượng này được lưu theo giá trị. Khi lượt được sao chép sang trạng thái dự kiến để chuẩn bị giao dịch, thông tin xe và thời gian của lượt cũng được sao chép theo. Không có một danh sách xe chung mà mọi lượt cùng sửa; biển số và loại xe của một lượt lịch sử vẫn giữ nguyên sau khi lượt đó kết thúc. \code{ParkingSession} có thể chứa một \code{LostTicketInfo} tùy chọn; thông tin này chỉ xuất hiện khi lượt được đóng do mất thẻ.
 
 \begin{figure}[H]
 \centering
@@ -65,7 +66,7 @@ Lượt & Thẻ & Biển số & Vào / ra ngày 26/10 & Phí\\
 Số 0 ở lượt đang gửi chỉ biểu thị chưa thu tiền, không có nghĩa là lượt được miễn phí. Việc phân biệt này được hỗ trợ bởi giờ ra tùy chọn và cờ phí thủ công, thay vì suy luận trạng thái chỉ từ số tiền. Một lượt qua đêm đã trả có thể có phí 0 nếu có lý do hợp lệ, còn một lượt đang gửi luôn chưa hoàn tất thu tiền.
 
 \section{Trạng thái của lượt và đối tượng báo giá}
-\code{ParkingSession} chỉ có hai trạng thái lưu trữ: đang gửi và đã trả. Trạng thái được suy ra từ việc có hay chưa có giờ ra. Cách biểu diễn này tránh lưu song song một cờ \code{paid} hoặc \code{closed} có thể không khớp với thời gian. Khi đóng lượt, giờ ra, phí và thông tin thu thủ công được kiểm tra rồi cập nhật cùng nhau.
+\code{ParkingSession} chỉ có hai trạng thái lưu trữ: đang gửi và đã trả. Trạng thái được suy ra từ việc có hay chưa có giờ ra. Cách biểu diễn này tránh lưu song song một cờ \code{paid} hoặc \code{closed} có thể không khớp với thời gian. Khi đóng lượt, giờ ra, phí và thông tin thu thủ công được kiểm tra rồi cập nhật cùng nhau. Lượt mất thẻ vẫn là trạng thái đã trả; nó chỉ mang thêm thông tin sinh viên/chủ xe và cờ phí thủ công.
 
 \begin{figure}[H]
 \centering
@@ -79,7 +80,7 @@ Xem báo giá không tạo trạng thái thứ ba trong tệp. Dịch vụ trả
 Khi xác nhận, dịch vụ không dùng riêng mã thẻ và số tiền từ báo giá. Nó tìm lại lượt hiện tại, kiểm tra định danh rồi tính lại phí. Điều này giữ sự phân biệt giữa dữ liệu dùng để trình bày và dữ liệu có quyền quyết định giao dịch. Trong bản một phiên, hai bước thường diễn ra liên tiếp, nhưng phép kiểm tra vẫn cần để tránh dùng lại một đối tượng báo giá đã cũ trong lời gọi nghiệp vụ.
 
 \section{Ràng buộc và giao diện nghiệp vụ}
-Ràng buộc được đặt ở nơi có đủ thông tin để kiểm tra. \code{Vehicle} biết cách chuẩn hóa biển số, nhưng không thể biết xe đã có trong bãi hay chưa. \code{ParkingSession} kiểm tra giờ ra và thông tin thu tiền, còn \code{ParkingLot} kiểm tra thẻ, biển số đang dùng và sức chứa. Dịch vụ kiểm tra sự phù hợp của báo giá với lượt hiện tại và điều phối việc lưu.
+Ràng buộc được đặt ở nơi có đủ thông tin để kiểm tra. \code{Vehicle} biết cách chuẩn hóa biển số, nhưng không thể biết xe đã có trong bãi hay chưa. \code{ParkingSession} kiểm tra giờ ra và thông tin thu tiền, còn \code{ParkingLot} kiểm tra thẻ, biển số đang dùng và sức chứa. \code{ParkingLot::findActiveByPlate()} bổ sung đường tra cứu khi không có mã thẻ. Dịch vụ kiểm tra sự phù hợp của báo giá với lượt hiện tại và điều phối việc lưu.
 
 \begin{table}[H]
 \centering\small
@@ -92,6 +93,9 @@ Thao tác & Ý nghĩa\\
 \code{checkIn()} & Nhận dữ liệu, tạo lượt và chỉ trả mã lượt sau khi lưu được.\\
 \code{prepareCheckout()} & Kiểm tra thẻ, thời gian, tạo báo giá; không ghi tệp.\\
 \code{confirmCheckout()} & Kiểm tra lại lượt, xác định phí, lưu rồi áp dụng kết quả.\\
+\code{prepareLostTicketCheckout()} & Tra theo biển số, tạo báo giá mất thẻ; không ghi tệp.\\
+\code{confirmLostTicketCheckout()} & Kiểm tra lại lượt, lưu thông tin mất thẻ và phí thủ công.\\
+\code{getLostTicketSessions()} & Lọc các lượt đã xử lý mất thẻ.\\
 \code{searchByCard()} & Tìm lịch sử chính xác theo mã thẻ chuẩn hóa.\\
 \code{searchByPlate()} & Tìm lịch sử chính xác theo biển số chuẩn hóa.\\
 \code{statistics()} & Đếm lượt và cộng doanh thu của ngày hợp lệ.\\

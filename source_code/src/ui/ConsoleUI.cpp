@@ -83,6 +83,43 @@ void ConsoleUI::releaseVehicle() {
     std::cout << "ĐÃ TRẢ XE. Dữ liệu đã lưu, thẻ " << quote.cardId << " có thể dùng lại.\n";
 }
 
+void ConsoleUI::lostTicket() {
+    const auto plate = readLine("Biển số xe bị mất thẻ: ");
+    const auto time = readTime("Giờ ra/giờ báo mất");
+    const auto quote = service_.prepareLostTicketCheckout(plate, time);
+    const auto& session = service_.getLot().findActiveByPlate(plate);
+    std::cout << "Lượt #" << quote.sessionId << " | Thẻ: " << quote.cardId
+              << " | Biển số: " << quote.plate << " | " << session.getVehicle().typeName()
+              << "\nGiờ vào: " << quote.entry.toString() << " | Giờ ra: " << quote.exit.toString()
+              << '\n';
+    if (quote.fee) {
+        std::cout << "Phí theo biểu phí (tham khảo): " << money(*quote.fee) << '\n';
+    } else {
+        std::cout << "Lượt qua ngày: không có phí tự động, cần nhập phí thủ công.\n";
+    }
+    const auto studentId = readLine("Mã SV/CCCD sinh viên: ");
+    const auto studentName = readLine("Họ tên sinh viên: ");
+    const auto ownerName = readLine("Họ tên chủ xe trên giấy tờ: ");
+    const auto ownerId = readLine("CCCD/CMND chủ xe (có thể bỏ trống): ");
+    const auto className = readLine("Lớp (có thể bỏ trống): ");
+    const auto phone = readLine("Số điện thoại (có thể bỏ trống): ");
+    const auto note = readLine("Ghi chú (có thể bỏ trống): ");
+    const auto fee = readNumber("Phí thu thủ công (VND, số nguyên): ", 0,
+                                std::numeric_limits<long long>::max());
+    const LostTicketInfo info(studentId, studentName, ownerName, ownerId, className, phone, note);
+    std::cout << "XÁC NHẬN MẤT THẺ\n"
+              << "Sinh viên: " << info.getStudentId() << " - " << info.getStudentName() << '\n'
+              << "Chủ xe: " << info.getOwnerName() << '\n'
+              << "Phí thu: " << money(fee) << '\n';
+    if (!confirm("Lưu thông tin mất thẻ và cho xe ra?")) {
+        std::cout << "Đã hủy xử lý mất thẻ. Lượt gửi vẫn đang hoạt động.\n";
+        return;
+    }
+    service_.confirmLostTicketCheckout(quote, fee, info);
+    std::cout << "ĐÃ XỬ LÝ MẤT THẺ. Lượt #" << quote.sessionId
+              << " đã đóng, dữ liệu đã lưu.\n";
+}
+
 void ConsoleUI::printSession(const ParkingSession& session) {
     std::cout << '#' << session.getId() << " | Thẻ " << session.getCardId() << " | "
               << session.getVehicle().getPlate() << " | " << session.getVehicle().typeName()
@@ -93,6 +130,17 @@ void ConsoleUI::printSession(const ParkingSession& session) {
         std::cout << " | Ra " << session.getExit()->toString() << " | "
                   << money(session.getPaidFee()) << '\n';
         if (session.hasManualFee()) std::cout << "   Phí thủ công: " << session.getReason() << '\n';
+        if (session.hasLostTicket()) {
+            const auto& info = *session.getLostTicket();
+            std::cout << "   MẤT THẺ | SV: " << info.getStudentId() << " - "
+                      << info.getStudentName();
+            if (!info.getClassName().empty()) std::cout << " | Lớp: " << info.getClassName();
+            if (!info.getPhone().empty()) std::cout << " | SĐT: " << info.getPhone();
+            std::cout << "\n   Chủ xe: " << info.getOwnerName();
+            if (!info.getOwnerId().empty()) std::cout << " | CCCD chủ xe: " << info.getOwnerId();
+            if (!info.getNote().empty()) std::cout << " | Ghi chú: " << info.getNote();
+            std::cout << '\n';
+        }
     }
 }
 void ConsoleUI::showActive() const {
@@ -115,6 +163,12 @@ void ConsoleUI::showHistory() const {
     std::cout << "TOÀN BỘ LỊCH SỬ: " << sessions.size() << " lượt.\n";
     for (const auto& session : sessions) printSession(session);
 }
+void ConsoleUI::showLostTickets() const {
+    const auto sessions = service_.getLostTicketSessions();
+    std::cout << "DANH SÁCH MẤT THẺ: " << sessions.size() << " lượt.\n";
+    for (const auto& session : sessions) printSession(session);
+    if (sessions.empty()) std::cout << "Chưa có lượt mất thẻ nào.\n";
+}
 void ConsoleUI::showStatistics() const {
     const auto date = readLine("Ngày thống kê [YYYY-MM-DD]: ");
     const auto result = service_.statistics(date);
@@ -134,9 +188,10 @@ void ConsoleUI::run() {
     while (true) {
         std::cout << "\n1. Nhận xe          2. Trả xe            3. Xe đang gửi\n"
                      "4. Tìm kiếm         5. Lịch sử          6. Thống kê ngày\n"
-                     "7. Đổi sức chứa     0. Thoát\n";
+                     "7. Đổi sức chứa     8. Xử lý mất thẻ    9. Danh sách mất thẻ\n"
+                     "0. Thoát\n";
         try {
-            const auto choice = readNumber("Chọn chức năng: ", 0, 7);
+            const auto choice = readNumber("Chọn chức năng: ", 0, 9);
             switch (choice) {
                 case 0: std::cout << "Đã thoát. Mọi giao dịch thành công đã được lưu.\n"; return;
                 case 1: receiveVehicle(); break;
@@ -146,6 +201,8 @@ void ConsoleUI::run() {
                 case 5: showHistory(); break;
                 case 6: showStatistics(); break;
                 case 7: changeCapacity(); break;
+                case 8: lostTicket(); break;
+                case 9: showLostTickets(); break;
             }
         } catch (const ParkingException& error) {
             if (std::cin.eof()) {

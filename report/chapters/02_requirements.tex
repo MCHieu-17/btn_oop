@@ -2,7 +2,7 @@
 \label{chap:requirements}
 
 \section{Người sử dụng và các nhóm chức năng}
-Người dùng trực tiếp là nhân viên trông xe. Nhân viên nhập mã thẻ, biển số, xác nhận việc thu tiền và xem thông tin quản lý. Sinh viên không có tài khoản trong hệ thống; phần mềm chỉ ghi nhận phương tiện và lượt gửi. Cách xác định này giúp tránh đưa thêm các lớp hồ sơ sinh viên hoặc đăng nhập trong khi các chức năng hiện tại chưa cần đến chúng.
+Người dùng trực tiếp là nhân viên trông xe. Nhân viên nhập mã thẻ, biển số, xác nhận việc thu tiền và xem thông tin quản lý. Sinh viên không có tài khoản trong hệ thống; phần mềm chỉ ghi nhận phương tiện, lượt gửi và thông tin sinh viên/chủ xe khi xử lý mất thẻ. Cách xác định này giúp tránh đưa thêm đăng nhập hoặc hồ sơ sinh viên thường xuyên; thông tin mất thẻ chỉ lưu trong lượt gửi tương ứng.
 
 Hệ thống có ba nhóm công việc. Nhóm giao dịch gồm nhận và trả xe, làm thay đổi số xe trong bãi. Nhóm tra cứu gồm xem xe đang gửi, tìm kiếm và lịch sử, chỉ đọc dữ liệu. Nhóm quản lý gồm thống kê theo ngày và thay đổi sức chứa. Khi khởi động, chương trình đọc lại dữ liệu đã lưu; chỉ khi chưa có dữ liệu mới hỏi sức chứa ban đầu.
 
@@ -31,6 +31,8 @@ F07 & Thống kê & Đếm lượt vào/ra và doanh thu theo ngày.\\
 F08 & Sức chứa & Lưu sức chứa mới không nhỏ hơn số xe đang gửi.\\
 F09 & Khôi phục & Đọc lại lịch sử, lượt còn mở và mã lượt kế tiếp.\\
 F10 & Demo & Nhập thời gian để trình diễn, sử dụng dữ liệu riêng.\\
+F11 & Mất thẻ & Tra theo biển số, lưu thông tin sinh viên/chủ xe, thu phí thủ công.\\
+F12 & Danh sách mất thẻ & Xem các lượt đã xử lý mất thẻ.\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -80,6 +82,11 @@ Nếu nhân viên hủy sau khi xem phí, xe vẫn được tính vào số xe �
 
 Ở bước xác nhận, dịch vụ tìm lại lượt hiện tại và đối chiếu mã lượt, biển số, giờ vào với báo giá. Đây là cách ngăn một báo giá của lượt trước được áp dụng nhầm sau khi thẻ đã được tái sử dụng. Nếu kiểm tra hoặc lưu tệp thất bại, lượt hiện tại vẫn chưa đóng và chương trình chưa ghi nhận doanh thu.
 
+\section{Xử lý mất thẻ}
+Khi sinh viên làm mất thẻ, mã thẻ không còn là khóa tra cứu. Nhân viên nhập biển số để tìm lượt đang gửi, rồi ghi nhận giờ ra và thông tin trên giấy tờ. Mã SV/CCCD, họ tên sinh viên và họ tên chủ xe là bắt buộc; CCCD chủ xe, lớp, số điện thoại và ghi chú có thể bỏ trống. Vì sinh viên có thể đi xe của bố mẹ, thông tin sinh viên và chủ xe được lưu thành hai nhóm riêng.
+
+Lượt mất thẻ luôn thu phí thủ công, kể cả khi vào và ra trong cùng ngày. Phí tự động, nếu có, chỉ hiển thị để nhân viên tham khảo. Lý do được ghi tự động là “Mất thẻ”. Thông tin được lưu cùng lượt gửi, không cần tệp ảnh riêng, và thẻ bị mất vẫn có thể dùng lại nếu tìm thấy.
+
 \section{Biểu phí và các trường hợp biên}
 Biểu phí tự động được xét trên một lượt có thời gian vào và ra thuộc cùng ngày. Mốc phân chia là 19:00. Cụm từ ban ngày trong thiết kế chỉ nhóm quy tắc trước mốc này; chương trình chưa mô hình hóa lịch đóng, mở cổng theo từng ngày.
 
@@ -95,6 +102,7 @@ Trước 19:00 & Trước 19:00, cùng ngày & 3.000\\
 Từ 19:00 & Không trước giờ vào, cùng ngày & 5.000\\
 Trước 19:00 & Từ 19:00, cùng ngày & 7.000\\
 Bất kỳ giờ hợp lệ & Khác ngày vào & Nhập thủ công\\
+Bất kỳ giờ hợp lệ & Bất kỳ giờ hợp lệ & Nhập thủ công do mất thẻ\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -117,6 +125,6 @@ Xe đang gửi là lượt chưa có giờ ra. Chỗ trống bằng sức chứa
 
 Tra cứu so khớp chính xác sau chuẩn hóa và trả cả lịch sử. Một thẻ có thể có nhiều kết quả, nhưng tối đa một lượt đang gửi. Mã lượt giúp phân biệt những lần dùng lại thẻ.
 
-Thống kê đếm lượt vào theo ngày vào, lượt ra và doanh thu theo ngày ra. Xe qua đêm có lượt vào ở ngày trước, còn lượt ra và phí ở ngày sau. Lượt chưa trả hoặc báo giá bị hủy không tạo doanh thu.
+Thống kê đếm lượt vào theo ngày vào, lượt ra và doanh thu theo ngày ra. Xe qua đêm có lượt vào ở ngày trước, còn lượt ra và phí ở ngày sau. Lượt mất thẻ đã trả cũng được tính doanh thu theo ngày ra. Lượt chưa trả hoặc báo giá bị hủy không tạo doanh thu.
 
 Các quan hệ trên phải được kiểm tra lại khi đọc tệp. Phần thiết kế tiếp theo xác định lớp chịu trách nhiệm bảo vệ từng điều kiện, kể cả khi dữ liệu bị sửa ngoài chương trình.

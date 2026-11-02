@@ -17,6 +17,12 @@ int failed = 0;
 
 DateTime at(const std::string& value) { return DateTime::parse(value); }
 Vehicle bike(const std::string& plate = "29A1-123.45") { return Vehicle(plate, VehicleType::Motorbike); }
+LostTicketInfo lostInfo(const std::string& studentId = "SV001",
+                        const std::string& studentName = "Nguyen Van A",
+                        const std::string& ownerName = "Tran Van B") {
+    return LostTicketInfo(studentId, studentName, ownerName, "001234567890", "K66",
+                          "0912345678", "Xe cua bo");
+}
 std::filesystem::path file(const std::string& name) { return testRoot / name / "parking_data.txt"; }
 void write(const std::filesystem::path& path, const std::string& content) {
     std::filesystem::create_directories(path.parent_path());
@@ -228,19 +234,19 @@ int main() {
     });
     run("T26_wrong_stored_fee_rejected", [] {
         const auto path = file("bad_fee");
-        write(path, "PARKING_DATA_V1 10 2\n1 \"C1\" \"29A12345\" 1 \"2026-10-26 08:00\" \"2026-10-26 17:00\" 1 0 \"\"\n");
+        write(path, "PARKING_DATA 10 2\n1 \"C1\" \"29A12345\" 1 \"2026-10-26 08:00\" \"2026-10-26 17:00\" 1 0 \"\" 0 \"\" \"\" \"\" \"\" \"\" \"\" \"\"\n");
         expectThrow<StorageException>([&] { ParkingRepository(path).load(); });
     });
     run("T27_duplicate_active_cards_in_file_rejected", [] {
         const auto path = file("bad_cards");
-        write(path, "PARKING_DATA_V1 10 3\n1 \"C1\" \"29A12345\" 1 \"2026-10-26 08:00\" \"-\" 0 0 \"\"\n2 \"c1\" \"29A99999\" 1 \"2026-10-26 08:00\" \"-\" 0 0 \"\"\n");
+        write(path, "PARKING_DATA 10 3\n1 \"C1\" \"29A12345\" 1 \"2026-10-26 08:00\" \"-\" 0 0 \"\" 0 \"\" \"\" \"\" \"\" \"\" \"\" \"\"\n2 \"c1\" \"29A99999\" 1 \"2026-10-26 08:00\" \"-\" 0 0 \"\" 0 \"\" \"\" \"\" \"\" \"\" \"\" \"\"\n");
         expectThrow<StorageException>([&] { ParkingRepository(path).load(); });
     });
     run("T28_invalid_stored_date_and_next_id_rejected", [] {
         const auto path = file("bad_date");
-        write(path, "PARKING_DATA_V1 10 2\n1 \"C1\" \"29A12345\" 1 \"2026-02-30 08:00\" \"-\" 0 0 \"\"\n");
+        write(path, "PARKING_DATA 10 2\n1 \"C1\" \"29A12345\" 1 \"2026-02-30 08:00\" \"-\" 0 0 \"\" 0 \"\" \"\" \"\" \"\" \"\" \"\" \"\"\n");
         expectThrow<StorageException>([&] { ParkingRepository(path).load(); });
-        write(path, "PARKING_DATA_V1 10 1\n1 \"C1\" \"29A12345\" 1 \"2026-10-26 08:00\" \"-\" 0 0 \"\"\n");
+        write(path, "PARKING_DATA 10 1\n1 \"C1\" \"29A12345\" 1 \"2026-10-26 08:00\" \"-\" 0 0 \"\" 0 \"\" \"\" \"\" \"\" \"\" \"\" \"\"\n");
         expectThrow<StorageException>([&] { ParkingRepository(path).load(); });
     });
     run("T29_failed_save_preserves_entry_state_and_disk", [] {
@@ -311,6 +317,120 @@ int main() {
         service.checkIn("C1", bike(), at("2026-10-26 09:00"));
         service.confirmCheckout(service.prepareCheckout("C1", at("2026-10-26 17:00")));
         expectThrow<ValidationException>([&] { service.statistics("2026-10-26"); });
+    });
+    run("T36_lost_ticket_same_day_manual_fee", [] {
+        const auto path = file("lost_same_day");
+        ParkingService service(ParkingRepository(path), 2);
+        service.checkIn("C1", bike(), at("2026-10-26 08:00"));
+        const auto quote = service.prepareLostTicketCheckout("29a1-123.45", at("2026-10-26 17:00"));
+        assert(quote.manualRequired && quote.fee == 3000);
+        service.confirmLostTicketCheckout(quote, 50000, lostInfo());
+        assert(service.getLot().activeCount() == 0);
+        const auto stat = service.statistics("2026-10-26");
+        assert(stat.entries == 1 && stat.exits == 1 && stat.revenue == 50000);
+        const auto restored = ParkingRepository(path).load();
+        assert(restored.getSessions().size() == 1);
+        const auto& session = restored.getSessions()[0];
+        assert(session.hasLostTicket() && session.hasManualFee() && session.getPaidFee() == 50000);
+        assert(session.getLostTicket()->getStudentId() == "SV001");
+        assert(session.getLostTicket()->getOwnerName() == "Tran Van B");
+    });
+    run("T37_lost_ticket_requires_student_and_owner_info", [] {
+        ParkingService service(ParkingRepository(file("lost_validation")), 1);
+        service.checkIn("C1", bike(), at("2026-10-26 08:00"));
+        const auto quote = service.prepareLostTicketCheckout("29A1-12345", at("2026-10-26 17:00"));
+        expectThrow<ValidationException>([&] {
+            service.confirmLostTicketCheckout(quote, 50000, LostTicketInfo("", "A", "B"));
+        });
+        expectThrow<ValidationException>([&] {
+            service.confirmLostTicketCheckout(quote, 50000, LostTicketInfo("SV001", "", "B"));
+        });
+        expectThrow<ValidationException>([&] {
+            service.confirmLostTicketCheckout(quote, 50000, LostTicketInfo("SV001", "A", ""));
+        });
+        expectThrow<ValidationException>([&] {
+            service.confirmLostTicketCheckout(quote, -1, lostInfo());
+        });
+        assert(service.getLot().activeCount() == 1);
+    });
+    run("T38_lost_ticket_unknown_plate", [] {
+        ParkingService service(ParkingRepository(file("lost_unknown")), 1);
+        expectThrow<NotFoundException>([&] {
+            service.prepareLostTicketCheckout("29A1-99999", at("2026-10-26 17:00"));
+        });
+    });
+    run("T39_lost_ticket_roundtrip_unicode_and_optional_fields", [] {
+        const auto path = file("lost_roundtrip");
+        ParkingService service(ParkingRepository(path), 1);
+        service.checkIn("C1", bike(), at("2026-10-26 08:00"));
+        const LostTicketInfo info("SV001", "Nguyễn Văn A", "Trần Văn B", "", "K66", "",
+                                  "Xe của bố");
+        service.confirmLostTicketCheckout(
+            service.prepareLostTicketCheckout("29A1-12345", at("2026-10-26 17:00")), 0, info);
+        const auto restored = ParkingRepository(path).load();
+        const auto& session = restored.getSessions()[0];
+        assert(session.hasLostTicket());
+        const auto& lost = *session.getLostTicket();
+        assert(lost.getStudentName() == "Nguyễn Văn A");
+        assert(lost.getOwnerName() == "Trần Văn B");
+        assert(lost.getOwnerId().empty() && lost.getPhone().empty());
+        assert(lost.getNote() == "Xe của bố");
+        assert(session.getPaidFee() == 0 && session.hasManualFee());
+    });
+    run("T40_lost_ticket_does_not_block_card_reuse", [] {
+        ParkingService service(ParkingRepository(file("lost_reuse")), 2);
+        service.checkIn("C1", bike(), at("2026-10-26 08:00"));
+        service.confirmLostTicketCheckout(
+            service.prepareLostTicketCheckout("29A1-12345", at("2026-10-26 17:00")), 50000,
+            lostInfo());
+        assert(service.checkIn("C1", bike("29A1-99999"), at("2026-10-26 18:00")) == 2);
+    });
+    run("T41_lost_ticket_stale_quote_rejected", [] {
+        ParkingService service(ParkingRepository(file("lost_stale")), 2);
+        service.checkIn("C1", bike(), at("2026-10-26 08:00"));
+        const auto quote = service.prepareLostTicketCheckout("29A1-12345", at("2026-10-26 17:00"));
+        service.confirmLostTicketCheckout(quote, 50000, lostInfo());
+        expectThrow<NotFoundException>([&] {
+            service.confirmLostTicketCheckout(quote, 50000, lostInfo());
+        });
+    });
+    run("T42_failed_lost_ticket_save_preserves_state", [] {
+        const auto path = file("lost_fail");
+        ParkingService service(ParkingRepository(path), 1);
+        service.checkIn("C1", bike(), at("2026-10-26 08:00"));
+        const auto before = read(path);
+        const auto quote = service.prepareLostTicketCheckout("29A1-12345", at("2026-10-26 17:00"));
+        std::filesystem::create_directory(std::filesystem::path(path).concat(".tmp"));
+        expectThrow<StorageException>([&] {
+            service.confirmLostTicketCheckout(quote, 50000, lostInfo());
+        });
+        assert(service.getLot().activeCount() == 1 && service.statistics("2026-10-26").revenue == 0);
+        assert(read(path) == before);
+    });
+    run("T43_invalid_lost_record_rejected", [] {
+        const auto path = file("bad_lost");
+        write(path, "PARKING_DATA 10 2\n1 \"C1\" \"29A12345\" 1 \"2026-10-26 08:00\" \"-\" 0 0 \"\" 1 \"SV001\" \"A\" \"B\" \"\" \"\" \"\" \"\"\n");
+        expectThrow<StorageException>([&] { ParkingRepository(path).load(); });
+    });
+    run("T44_non_lost_record_with_lost_fields_rejected", [] {
+        const auto path = file("bad_non_lost");
+        write(path, "PARKING_DATA 10 2\n1 \"C1\" \"29A12345\" 1 \"2026-10-26 08:00\" \"2026-10-26 17:00\" 3000 0 \"\" 0 \"SV001\" \"\" \"\" \"\" \"\" \"\" \"\"\n");
+        expectThrow<StorageException>([&] { ParkingRepository(path).load(); });
+    });
+    run("T45_lost_ticket_quoted_fields_roundtrip", [] {
+        const auto path = file("lost_quoted");
+        ParkingService service(ParkingRepository(path), 1);
+        service.checkIn("C1", bike(), at("2026-10-26 08:00"));
+        const LostTicketInfo info("SV\"001", "Nguyen \"A\"", "Tran \\ B", "001", "K66",
+                                  "0912", "Ghi chu \"dac biet\" \\");
+        service.confirmLostTicketCheckout(
+            service.prepareLostTicketCheckout("29A1-12345", at("2026-10-26 17:00")), 50000, info);
+        const auto restored = ParkingRepository(path).load();
+        const auto& lost = *restored.getSessions()[0].getLostTicket();
+        assert(lost.getStudentId() == "SV\"001");
+        assert(lost.getStudentName() == "Nguyen \"A\"");
+        assert(lost.getOwnerName() == "Tran \\ B");
+        assert(lost.getNote() == "Ghi chu \"dac biet\" \\");
     });
     std::cout << "RESULT " << passed << " passed, " << failed << " failed\n";
     std::error_code cleanupError;

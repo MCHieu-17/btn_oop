@@ -12,7 +12,9 @@ Hai thuộc tính nằm ở vùng riêng. Giao diện được phép lấy biể
 
 \CodeFile{code:session-close}{Kiểm tra và kết thúc một lượt gửi}{snippets/session_close.cpp}
 
-Đáng chú ý là cờ thu phí thủ công phải phù hợp với việc có qua ngày hay không. Chỉ gán một số tiền dương chưa đủ để hợp lệ: một lượt cùng ngày có cờ thủ công là sai quy tắc, còn lượt qua ngày thiếu lý do cũng chưa được chấp nhận. Những kiểm tra này nằm cùng thao tác đóng lượt để không phụ thuộc nhân viên đã đi qua menu nào.
+Đáng chú ý là cờ thu phí thủ công phải phù hợp với việc có qua ngày hay không. Chỉ gán một số tiền dương chưa đủ để hợp lệ: với lượt trả bình thường, một lượt cùng ngày có cờ thủ công là sai quy tắc, còn lượt qua ngày thiếu lý do cũng chưa được chấp nhận. Những kiểm tra này nằm cùng thao tác đóng lượt để không phụ thuộc nhân viên đã đi qua menu nào.
+
+Với lượt mất thẻ, \code{ParkingSession::closeLostTicket()} là thao tác đóng riêng. Phương thức vẫn kiểm tra giờ ra, phí không âm và lý do, nhưng cho phép phí thủ công trong cùng ngày và gắn \code{LostTicketInfo}. Nhờ vậy, quy tắc của lượt bình thường không bị nới lỏng.
 
 Các setter rời rạc như \code{setExit()}, \code{setFee()} hay \code{setClosed()} sẽ khiến phía gọi phải tự nhớ thứ tự và điều kiện. Thiết kế hiện tại dùng một thao tác mang ý nghĩa nghiệp vụ để gom trách nhiệm đó về lớp lượt gửi. Ở cấp toàn bãi, \code{recordEntry()} và \code{changeCapacity()} cũng thực hiện cùng cách tiếp cận với thẻ, biển số và sức chứa.
 
@@ -84,7 +86,7 @@ Ngoại lệ & Ví dụ phát sinh & Trạng thái cần giữ\\
 \end{tabularx}
 \end{table}
 
-Các lớp này kế thừa \code{ParkingException}; lớp gốc kế thừa \code{std::runtime\_error}. Đây là nhóm kế thừa thứ hai của chương trình. Giao diện có thể bắt chung theo tham chiếu lớp gốc mà vẫn nhận thông điệp của lỗi cụ thể qua \code{what()}. Bắt theo tham chiếu cũng tránh sao chép ngoại lệ thành một đối tượng chỉ còn phần lớp cha.
+Các lớp này kế thừa \code{ParkingException}; lớp gốc kế thừa \code{std::runtime\_error}. Đây là nhóm kế thừa thứ hai của chương trình. Giao diện có thể bắt chung theo tham chiếu lớp gốc mà vẫn nhận thông điệp của lỗi cụ thể qua \code{what()}. Bắt theo tham chiếu cũng tránh sao chép ngoại lệ thành một đối tượng chỉ còn phần lớp cha. Riêng \code{LostTicketInfo} kiểm tra mã SV/CCCD, họ tên sinh viên và họ tên chủ xe ngay trong hàm tạo, nên lỗi thiếu thông tin được phát hiện trước khi lượt bị đóng.
 
 \CodeFile{code:exceptions}{Lớp ngoại lệ gốc và các nhóm lỗi}{snippets/exceptions.h}
 

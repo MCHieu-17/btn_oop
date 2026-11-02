@@ -1,4 +1,4 @@
-﻿PASS T01_valid_calendar_and_leap_year
+PASS T01_valid_calendar_and_leap_year
 PASS T02_reject_invalid_datetime
 PASS T03_normalize_card_and_plate
 PASS T04_morning_to_afternoon_3000
@@ -33,4 +33,14 @@ PASS T32_search_history_by_normalized_plate
 PASS T33_same_day_manual_override_rejected
 PASS T34_quoted_unicode_reason_roundtrip_and_zero_fee
 PASS T35_reject_invalid_statistics_date_and_overflow
-RESULT 35 passed, 0 failed
+PASS T36_lost_ticket_same_day_manual_fee
+PASS T37_lost_ticket_requires_student_and_owner_info
+PASS T38_lost_ticket_unknown_plate
+PASS T39_lost_ticket_roundtrip_unicode_and_optional_fields
+PASS T40_lost_ticket_does_not_block_card_reuse
+PASS T41_lost_ticket_stale_quote_rejected
+PASS T42_failed_lost_ticket_save_preserves_state
+PASS T43_invalid_lost_record_rejected
+PASS T44_non_lost_record_with_lost_fields_rejected
+PASS T45_lost_ticket_quoted_fields_roundtrip
+RESULT 45 passed, 0 failed

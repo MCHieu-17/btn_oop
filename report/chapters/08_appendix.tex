@@ -6,7 +6,7 @@ Các mã dưới đây tương ứng với tên ca trong chương trình kiểm 
 
 \begingroup\small
 \begin{longtable}{p{0.85cm} p{11.9cm} p{1.2cm}}
-\caption{Ma trận đầy đủ của 35 ca kiểm thử}\label{tab:all-tests}\\
+\caption{Ma trận đầy đủ của 45 ca kiểm thử}\label{tab:all-tests}\\
 \toprule Mã & Nội dung và kết quả mong đợi & Kết quả\\\midrule
 \endfirsthead
 \toprule Mã & Nội dung và kết quả mong đợi & Kết quả\\\midrule
@@ -47,6 +47,16 @@ T32 & Tìm kiếm đã chuẩn hóa trả đủ các lượt lịch sử. & Đ�
 T33 & Không cho sửa phí thủ công của lượt cùng ngày. & Đạt\\
 T34 & Giữ đúng lý do tiếng Việt có dấu nháy/gạch chéo và phí 0. & Đạt\\
 T35 & Từ chối ngày thống kê sai; phát hiện tổng tiền tràn số. & Đạt\\
+T36 & Mất thẻ trong ngày: phí thủ công, doanh thu và thông tin được lưu. & Đạt\\
+T37 & Thiếu mã SV/CCCD, họ tên SV hoặc họ tên chủ xe bị từ chối. & Đạt\\
+T38 & Biển số không có lượt đang gửi bị từ chối. & Đạt\\
+T39 & Thông tin mất thẻ có tiếng Việt, trường tùy chọn để trống. & Đạt\\
+T40 & Thẻ bị mất vẫn được dùng lại cho lượt mới. & Đạt\\
+T41 & Báo giá mất thẻ cũ bị từ chối sau khi lượt đã đóng. & Đạt\\
+T42 & Lỗi ghi khi xử lý mất thẻ: bộ nhớ và tệp cũ không đổi. & Đạt\\
+T43 & Từ chối bản ghi có thông tin mất thẻ nhưng lượt đang gửi. & Đạt\\
+T44 & Từ chối bản ghi không mất thẻ nhưng có trường mất thẻ. & Đạt\\
+T45 & Giữ đúng mã SV, họ tên và ghi chú có dấu nháy/gạch chéo. & Đạt\\
 \end{longtable}\endgroup
 
 \section{Dữ liệu kết thúc kịch bản console}
@@ -66,5 +76,7 @@ Lượt & Thẻ & Thời gian vào & Thời gian ra & Phí\\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+C05 dùng một thư mục riêng: nhận C010, xử lý mất thẻ trong ngày với phí 50.000, lưu mã SV/CCCD, họ tên sinh viên và họ tên chủ xe. C06 nhận lại bằng C010 để xác nhận thẻ không bị khóa.
 
 Để chạy lại toàn bộ kiểm tra trên Windows, dùng script \path{source_code/scripts/test.ps1}. Nhật ký C++ và console được tạo trong thư mục build. Các thư mục kiểm thử tạm được tạo riêng và dọn sau khi chạy; chúng không thay thế dữ liệu ở \path{data/} hoặc \path{demo_data/}.

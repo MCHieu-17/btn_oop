@@ -1,8 +1,6 @@
 \begin{titlepage}
 \centering
 {\fontsize{16}{20}\selectfont\bfseries\SchoolName\par}
-\vspace{0.2cm}
-{\normalsize\FacultyName\par}
 \vspace{0.4cm}
 \rule{0.62\textwidth}{0.5pt}\par
 \vspace{1.3cm}
@@ -35,43 +33,14 @@ STT & Họ và tên sinh viên & Mã sinh viên\\
 \pagenumbering{roman}
 \hypersetup{pageanchor=true}
 
-\chapter*{Nhóm thực hiện}
-\noindent\textbf{Đề tài:} Hệ thống quản lý bãi đỗ xe sinh viên bằng C++.\par
-\noindent\textbf{Học phần:} \CourseName.\par
-\noindent\textbf{Cơ sở đào tạo:} Đại học Kinh tế Quốc dân.
-
-\section*{Phân công dự kiến}
-Nội dung được chia theo các phần có thể phát triển và kiểm tra tương đối độc lập. Sau khi thống nhất giao diện lớp, các phần được ghép qua lớp dịch vụ để thử toàn bộ quy trình nhận và trả xe. Bảng dưới đây là đề xuất phân công; nhóm cần cập nhật theo đóng góp thực tế trước khi nộp.
-
-\begin{table}[H]
-\centering\small
-\begin{tabularx}{\textwidth}{Y Y}
-\toprule
-Thành viên & Phần việc dự kiến\\
-\midrule
-\MemberOne & Phân tích yêu cầu; mô hình xe, lượt gửi và bãi xe; nghiệp vụ nhận và trả.\\[8pt]
-\MemberTwo & Các quy tắc phí; kế thừa và đa hình; ngoại lệ; kiểm thử nghiệp vụ.\\[8pt]
-\MemberThree & Đọc/ghi tệp; giao diện console; tích hợp; tổng hợp hình và báo cáo.\\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-Việc rà soát sơ đồ lớp, kiểm tra các tình huống lỗi và chuẩn bị trình diễn cần có sự tham gia của cả ba thành viên. Những phần giao nhau, chẳng hạn trả xe và ghi tệp, phải được kiểm tra sau khi tích hợp thay vì chỉ kiểm tra riêng từng lớp.
-
-\section*{Xác nhận phân công thực tế}
-\noindent\rule{\textwidth}{0.3pt}\par\vspace{0.6cm}
-\noindent\rule{\textwidth}{0.3pt}\par\vspace{0.6cm}
-\noindent\rule{\textwidth}{0.3pt}
-\clearpage
-
 \chapter*{Tóm tắt}
 Một lượt gửi xe trong trường đại học thường bắt đầu bằng việc giao thẻ và kết thúc bằng việc đối chiếu xe, thu tiền, nhận lại thẻ. Các bước này ngắn nhưng có liên hệ chặt chẽ: thẻ phải gắn với đúng xe, mức phí phụ thuộc thời điểm vào và ra, còn lịch sử cần được giữ lại sau khi thẻ đã chuyển sang lượt khác. Đề tài lựa chọn quy trình đó để xây dựng một chương trình quản lý bãi xe bằng C++.
 
-Chương trình phục vụ nhân viên bãi xe, quản lý xe máy và xe máy điện qua giao diện console. Thao tác quẹt thẻ được mô phỏng bằng nhập mã; biển số được nhập thủ công. Ba mức phí 3.000, 5.000 và 7.000 đồng được xác định theo mốc 19:00 trong cùng ngày. Lượt qua ngày được chuyển sang thu phí thủ công kèm lý do. Các giao dịch thành công được lưu vào tệp để có thể tiếp tục quản lý sau khi mở lại chương trình.
+Chương trình phục vụ nhân viên bãi xe, quản lý xe máy và xe máy điện qua giao diện console. Thao tác quẹt thẻ được mô phỏng bằng nhập mã; biển số được nhập thủ công. Ba mức phí 3.000, 5.000 và 7.000 đồng được xác định theo mốc 19:00 trong cùng ngày. Lượt qua ngày được chuyển sang thu phí thủ công kèm lý do. Khi sinh viên làm mất thẻ, chương trình tra theo biển số, lưu thông tin sinh viên/chủ xe và thu phí thủ công. Các giao dịch thành công được lưu vào tệp để có thể tiếp tục quản lý sau khi mở lại chương trình.
 
 Thiết kế tách xe, lượt gửi và bãi xe khỏi giao diện và lớp lưu trữ. Các quy tắc phí cùng kế thừa một lớp trừu tượng, cho phép bộ tính phí gọi qua giao diện chung. Ngoại lệ được phân loại theo lỗi nhập liệu, xung đột, sức chứa và lưu trữ. Khi thay đổi dữ liệu, dịch vụ chuẩn bị trạng thái dự kiến, lưu tệp rồi mới áp dụng vào bộ nhớ.
 
-Kết quả kiểm tra gồm 35 ca C++ và bốn kịch bản console đạt yêu cầu. Báo cáo dành phần chính để giải thích các quyết định thiết kế, theo dõi những tình huống cụ thể và đánh giá giới hạn của cách lưu tệp. Sản phẩm phù hợp phạm vi bài tập nhóm, vận hành một máy và chưa tích hợp thiết bị ở cổng bãi xe.
+Kết quả kiểm tra gồm 45 ca C++ và sáu kịch bản console đạt yêu cầu. Báo cáo dành phần chính để giải thích các quyết định thiết kế, theo dõi những tình huống cụ thể và đánh giá giới hạn của cách lưu tệp. Sản phẩm phù hợp phạm vi bài tập nhóm, vận hành một máy và chưa tích hợp thiết bị ở cổng bãi xe.
 
 \vspace{0.5cm}
 \noindent\textbf{Từ khóa:} C++; lập trình hướng đối tượng; quản lý bãi xe; đa hình; xử lý ngoại lệ.

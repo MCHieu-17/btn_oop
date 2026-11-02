@@ -58,6 +58,29 @@ void ParkingService::confirmCheckout(const CheckoutQuote& quote,
     commit(std::move(candidate));
 }
 
+CheckoutQuote ParkingService::prepareLostTicketCheckout(const std::string& plate,
+                                                       const DateTime& exit) const {
+    const auto& session = lot_.findActiveByPlate(plate);
+    if (exit < session.getEntry()) throw ValidationException("Giờ ra không được trước giờ vào.");
+    std::optional<long long> fee;
+    if (session.getEntry().sameDate(exit)) fee = calculator_.calculate(session.getEntry(), exit);
+    return {session.getId(), session.getCardId(), session.getVehicle().getPlate(),
+            session.getEntry(), exit, fee, true};
+}
+
+void ParkingService::confirmLostTicketCheckout(const CheckoutQuote& quote, long long fee,
+                                               const LostTicketInfo& info) {
+    const auto verified = prepareLostTicketCheckout(quote.plate, quote.exit);
+    if (verified.sessionId != quote.sessionId || verified.plate != quote.plate ||
+        verified.entry != quote.entry) {
+        throw ConflictException("Báo giá không còn ứng với lượt gửi hiện tại. Hãy tra cứu lại biển số.");
+    }
+    if (fee < 0) throw ValidationException("Phí không được âm.");
+    ParkingLot candidate = lot_;
+    candidate.recordLostTicketExit(verified.sessionId, verified.exit, fee, info);
+    commit(std::move(candidate));
+}
+
 std::vector<ParkingSession> ParkingService::searchByCard(const std::string& cardId) const {
     const auto normalized = normalizeCardId(cardId);
     std::vector<ParkingSession> result;
@@ -71,6 +94,13 @@ std::vector<ParkingSession> ParkingService::searchByPlate(const std::string& pla
     std::vector<ParkingSession> result;
     for (const auto& session : lot_.getSessions()) {
         if (session.getVehicle().getPlate() == normalized) result.push_back(session);
+    }
+    return result;
+}
+std::vector<ParkingSession> ParkingService::getLostTicketSessions() const {
+    std::vector<ParkingSession> result;
+    for (const auto& session : lot_.getSessions()) {
+        if (session.hasLostTicket()) result.push_back(session);
     }
     return result;
 }

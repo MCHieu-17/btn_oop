@@ -53,11 +53,11 @@ try {
     $mainFile = Join-Path $runDirectory 'main/parking_data.txt'
     $lines = @(Get-Content -LiteralPath $mainFile -Encoding UTF8)
     Assert-True ($lines.Count -eq 5) 'Expected exactly four sessions after cancellations and card reuse.'
-    Assert-True ($lines[0] -eq 'PARKING_DATA_V1 3 5') 'Wrong capacity or next id.'
-    Assert-True (($lines | Where-Object { $_ -match ' 7000 0 ""$' }).Count -eq 1) 'Mixed fee not saved.'
-    Assert-True (($lines | Where-Object { $_ -match ' 5000 0 ""$' }).Count -eq 1) 'Night fee not saved.'
+    Assert-True ($lines[0] -eq 'PARKING_DATA 3 5') 'Wrong capacity or next id.'
+    Assert-True (($lines | Where-Object { $_ -match ' 7000 0 "" 0 ' }).Count -eq 1) 'Mixed fee not saved.'
+    Assert-True (($lines | Where-Object { $_ -match ' 5000 0 "" 0 ' }).Count -eq 1) 'Night fee not saved.'
     Assert-True (($lines | Where-Object { $_ -match ' 12000 1 ' }).Count -eq 1) 'Overnight fee not saved.'
-    Assert-True (($lines | Where-Object { $_ -match '"-" 0 0 ""$' }).Count -eq 1) 'Expected one active session.'
+    Assert-True (($lines | Where-Object { $_ -match '"-" 0 0 "" 0 ' }).Count -eq 1) 'Expected one active session.'
     foreach ($amount in @('3.000', '7.000', '5.000', '12.000')) {
         Assert-True ($mainOutput.Contains($amount)) "Missing amount $amount in console output."
     }
@@ -85,7 +85,28 @@ try {
     $null = Invoke-Parking @() "build/$runName/corrupt" $true 1
     Assert-True ([System.IO.File]::ReadAllText($badFile) -eq 'BROKEN DATA') 'Corrupt file overwritten.'
     Write-Host 'PASS C04_corrupt_startup_preserves_file'
-    'RESULT 4 CLI scenarios passed' | Set-Content -LiteralPath (Join-Path $buildDirectory 'cli_results.txt') -Encoding UTF8
+
+    $lostRelative = "build/$runName/lost"
+    $lostInput = @('2', '1', 'C010', '29L-11111', '1', '2026-10-26 08:00',
+        '8', '29L-11111', '2026-10-26 17:00',
+        'SV001', 'Nguyen Van A', 'Tran Van B', '001234567890', 'K66', '0912345678', 'Xe cua bo',
+        '50000', 'y',
+        '9', '5', '0')
+    $lostOutput = Invoke-Parking $lostInput $lostRelative
+    $lostFile = Join-Path $runDirectory 'lost/parking_data.txt'
+    $lostLines = @(Get-Content -LiteralPath $lostFile -Encoding UTF8)
+    Assert-True ($lostLines[0] -eq 'PARKING_DATA 2 2') 'Wrong lost-ticket header.'
+    Assert-True (($lostLines | Where-Object { $_ -match ' 50000 1 "Mất thẻ" 1 "SV001" "Nguyen Van A" "Tran Van B" "001234567890" "K66" "0912345678" "Xe cua bo"$' }).Count -eq 1) 'Lost-ticket record not saved.'
+    Assert-True ($lostOutput.Contains('MẤT THẺ')) 'Lost-ticket marker missing.'
+    Assert-True ($lostOutput.Contains('SV001')) 'Student id missing.'
+    Assert-True ($lostOutput.Contains('Tran Van B')) 'Owner name missing.'
+    Assert-True ($lostOutput.Contains('50.000')) 'Lost-ticket fee missing.'
+    Write-Host 'PASS C05_lost_ticket_manual_fee_and_record'
+
+    $reuseOutput = Invoke-Parking @('1', 'C010', '29L-22222', '1', '2026-10-26 18:00', '0') $lostRelative
+    Assert-True ($reuseOutput.Contains('ĐÃ NHẬN XE')) 'Lost card was blocked from reuse.'
+    Write-Host 'PASS C06_lost_card_can_be_reused'
+    'RESULT 6 CLI scenarios passed' | Set-Content -LiteralPath (Join-Path $buildDirectory 'cli_results.txt') -Encoding UTF8
 } finally {
     # Chỉ xóa thư mục kiểm thử tự tạo sau khi xác minh nó nằm trong build.
     $resolvedRun = [System.IO.Path]::GetFullPath($runDirectory)

@@ -8,7 +8,7 @@ Bộ kiểm thử C++ dùng \code{assert} và các hàm hỗ trợ bắt ngoại
 
 \begin{table}[H]
 \centering\small
-\caption{Phân nhóm 35 ca kiểm thử C++}
+\caption{Phân nhóm 45 ca kiểm thử C++}
 \label{tab:test-groups}
 \begin{tabularx}{\textwidth}{l Y c}
 \toprule
@@ -19,13 +19,14 @@ T04--T12 & Biểu phí, mốc 19:00, tính bao phủ & 9\\
 T13--T24 & Nhận/trả, trạng thái, qua đêm, sức chứa, khởi động lại & 12\\
 T25--T31 & Tệp hỏng, lỗi ghi, phục hồi bản sao lưu & 7\\
 T32--T35 & Tìm kiếm, phí thủ công, chuỗi tiếng Việt, giới hạn số & 4\\
+T36--T45 & Mất thẻ và thông tin sinh viên/chủ xe & 10\\
 \midrule
-Tổng & & 35\\
+Tổng & & 45\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Kết quả thực chạy là 35 ca C++ đạt và bốn kịch bản console đạt. Đây là kết quả của các tình huống được viết trong bộ kiểm tra, chưa phải một số đo bao phủ mọi dòng lệnh. Các phần dưới chọn những ca liên quan trực tiếp đến quyết định thiết kế để phân tích; danh sách đầy đủ nằm ở Phụ lục~\ref{app:tests}.
+Kết quả thực chạy là 45 ca C++ đạt và sáu kịch bản console đạt. Đây là kết quả của các tình huống được viết trong bộ kiểm tra, chưa phải một số đo bao phủ mọi dòng lệnh. Các phần dưới chọn những ca liên quan trực tiếp đến quyết định thiết kế để phân tích; danh sách đầy đủ nằm ở Phụ lục~\ref{app:tests}.
 
 \section{Biên 19:00 và tính đầy đủ của biểu phí}
 Ba ví dụ thông thường chưa đủ để phát hiện sai dấu so sánh ở mốc 19:00. Nếu quy tắc ban ngày dùng dấu nhỏ hơn hoặc bằng, một xe ra đúng 19:00 có thể bị thu 3.000 thay vì 7.000. Nếu quy tắc buổi tối chỉ nhận giờ vào lớn hơn 19:00, xe vào đúng mốc lại có thể không khớp quy tắc nào.
@@ -74,12 +75,17 @@ Chỉ chuẩn bị báo giá & Giữ nguyên & Chưa & Vẫn gắn với lượt
 Không xác nhận biển số & Giữ nguyên & Chưa & Vẫn gắn với lượt\\
 Không xác nhận thu tiền & Giữ nguyên & Chưa & Vẫn gắn với lượt\\
 Xác nhận và lưu được & Giảm một & Có & Có thể dùng lại\\
-Lưu thất bại & Giữ nguyên & Chưa ghi nhận & Chưa giải phóng\\
+Lưu thất bại & Giữ nguyên & Chưa ghi nhận & Vẫn gắn với lượt\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Các ca này cho thấy lý do phải có mã lượt độc lập, đối tượng báo giá tạm và bước xác nhận riêng. Nếu chỉ kiểm tra ba mức tiền, những sai sót về thời điểm giải phóng thẻ vẫn có thể tồn tại mà không bị phát hiện.
+Các ca này cho thấy lý do phải có mã lượt độc lập, đối tượng báo giá tạm và bước xác nhận riêng. Nếu chỉ kiểm tra ba mức tiền, những sai sót về thời điểm trả thẻ vẫn có thể tồn tại mà không bị phát hiện.
+
+\section{Mất thẻ và thông tin sinh viên/chủ xe}
+T36 kiểm tra lượt vào 08:00, ra 17:00 cùng ngày nhưng xử lý mất thẻ: phí tự động 3.000 chỉ để tham khảo, còn phí thực thu do nhân viên nhập là 50.000. Sau khi lưu, lượt đã đóng, doanh thu ghi 50.000 và thông tin sinh viên/chủ xe đọc lại đúng.
+
+Các ca còn lại kiểm tra những điều kiện khác nhau. T37 và T38 từ chối thông tin bắt buộc để trống hoặc biển số không có trong bãi; lượt vẫn đang gửi. T39 và T45 kiểm tra chuỗi tiếng Việt, dấu nháy và gạch chéo. T40 xác nhận thẻ bị mất vẫn dùng lại được, còn T41 chặn báo giá cũ. T42 mô phỏng lỗi ghi để chắc rằng dữ liệu không đổi. T43 và T44 từ chối bản ghi có thông tin mất thẻ nhưng trạng thái không khớp.
 
 \section{Lỗi ghi tệp và khôi phục dữ liệu}
 T29 và T30 tạo một thư mục tại đúng đường dẫn dành cho tệp \code{.tmp}. Khi lớp lưu trữ cố mở đường dẫn đó như tệp để ghi, thao tác thất bại. Cách mô phỏng này ổn định hơn việc trông chờ đĩa đầy hoặc thay quyền hệ thống, đồng thời không tác động đến dữ liệu của người dùng.
@@ -107,14 +113,14 @@ T31 mô phỏng một điểm gián đoạn khác: đã có dữ liệu hợp l�
 
 Các ca tệp hỏng kiểm tra tiêu đề, phí cùng ngày, thẻ trùng, ngày sai và mã kế tiếp không hợp lệ. Ca T25 còn so sánh nội dung tệp trước và sau khởi động thất bại. Vì vậy, việc không ghi đè tệp hỏng được kiểm tra bằng dữ liệu thực, không chỉ dựa vào thông báo lỗi.
 
-Giới hạn của nhóm kiểm thử này là chưa mô phỏng mọi điểm lỗi của hệ điều hành hoặc mất điện trong từng bước đổi tên. Nó xác nhận cách xử lý tại những điểm được thiết kế trong bộ kiểm tra. Nếu mở rộng thành hệ thống nhiều cổng, cần thêm kiểm thử tranh chấp và một cơ chế lưu trữ phù hợp trước khi dựa vào kết quả này.
+Nhóm kiểm thử này chưa mô phỏng mọi điểm lỗi của hệ điều hành hoặc mất điện trong từng bước đổi tên. Nó chỉ xác nhận cách xử lý tại những điểm đã được thiết kế trong bộ kiểm tra.
 
 \section{Kết quả chạy qua giao diện console}
 Các kịch bản đầu cuối chạy đúng tệp thực thi \code{parking.exe}, đưa dữ liệu qua luồng nhập và kiểm tra cả đầu ra lẫn tệp tạo ra. Nhờ vậy, phần đọc menu và hai bước xác nhận được kiểm tra cùng với dịch vụ, thay vì chỉ gọi phương thức C++ trực tiếp.
 
 \begin{table}[H]
 \centering\small
-\caption{Bốn kịch bản console đã chạy}
+\caption{Sáu kịch bản console đã chạy}
 \label{tab:cli-results}
 \begin{tabularx}{\textwidth}{l Y l}
 \toprule
@@ -124,6 +130,8 @@ C01 & Nhập menu sai, hủy trả, dùng lại thẻ, qua đêm và thống kê
 C02 & Mở lại, xem xe đang gửi và lịch sử; tệp không bị sửa & Đạt\\
 C03 & Chế độ thường lấy đúng ngày hệ thống để nhận xe & Đạt\\
 C04 & Tệp hỏng làm dừng khởi động và không bị ghi đè & Đạt\\
+C05 & Mất thẻ trong ngày, lưu thông tin sinh viên/chủ xe, phí thủ công & Đạt\\
+C06 & Thẻ bị mất vẫn dùng lại được & Đạt\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -134,25 +142,9 @@ Kịch bản C01 kết thúc với bốn lượt: lượt thứ nhất thu 7.000
 
 Ngày 26/10 có ba lượt vào, hai lượt ra và 12.000 đồng thực thu. Ngày 27/10 có một lượt ra qua đêm với 12.000 đồng. Dòng báo giá 3.000 không được cộng vào doanh thu vì lần đó bị hủy. Lượt thứ tư được nhận sau hai lần thống kê, nên bảng tổng hợp khi ấy chưa có lượt vào mới của ngày 27. Chi tiết thứ tự này cần được giữ khi đối chiếu ảnh hoặc nhật ký với dữ liệu cuối kịch bản.
 
+C05 dùng thư mục riêng để nhận C010, xử lý mất thẻ trong ngày với phí 50.000 và kiểm tra thông tin sinh viên/chủ xe trong tệp. C06 nhận lại bằng C010 để xác nhận thẻ không bị khóa.
+
 \section{Đánh giá thiết kế và giới hạn sử dụng}
-Kết quả kiểm thử xác nhận các ràng buộc đã chọn trong phạm vi một phiên. Khi mở rộng lượng dữ liệu, chi phí xử lý là một vấn đề khác cần xem xét:
+Kết quả kiểm thử xác nhận các ràng buộc đã chọn trong phạm vi một phiên. Cách lưu hiện tại duyệt và ghi lại toàn bộ lịch sử sau mỗi thay đổi, nên phù hợp với lượng dữ liệu nhỏ của bài tập. Khi lịch sử tăng nhiều, cần tách nhu cầu tra xe hiện tại khỏi nhu cầu lưu lịch sử dài hạn.
 
-\begin{table}[H]
-\centering\small
-\caption{Chi phí xử lý theo số lượt đã lưu n}
-\label{tab:complexity}
-\begin{tabularx}{\textwidth}{Y l Y}
-\toprule
-Thao tác & Chi phí chính & Nguyên nhân\\
-\midrule
-Tra thẻ hoặc biển số & O(n) & Duyệt các lượt trong vector.\\
-Thống kê một ngày & O(n) & Kiểm tra ngày và cộng phí từng lượt.\\
-Giao dịch có thay đổi & O(n) & Sao chép bãi, kiểm tra, ghi toàn bộ tệp.\\
-Kiểm tra bãi khi đọc & O(n log n) & Tạo các tập để phát hiện mã trùng.\\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-Bảng chi phí được suy ra từ cấu trúc vòng lặp và các tập kiểm tra, không phải kết quả đo thời gian. Với lượng dữ liệu nhỏ, cách cài đặt dễ đọc và dễ kiểm chứng. Khi lịch sử tăng nhiều, việc chép và ghi lại toàn bộ dữ liệu có thể làm giao dịch chậm, dù số xe thực tế đang gửi không lớn. Cần tách nhu cầu tra xe hiện tại khỏi nhu cầu giữ lịch sử dài hạn khi nâng cấp.
-
-Hệ thống còn thiếu xác thực người thao tác, đối soát tiền mặt khi ghi lỗi, kết nối phần cứng và khóa dữ liệu giữa nhiều tiến trình. Việc đối chiếu biển số vẫn phụ thuộc nhân viên. Đây là những phần cần bổ sung trước khi đưa ra cổng bãi xe.
+Chương trình chưa có đăng nhập, phân quyền, kết nối phần cứng hay xử lý nhiều cổng. Việc đối chiếu biển số vẫn phụ thuộc nhân viên. Phần mất thẻ chỉ mô phỏng giấy tờ bằng nhập tay, không lưu ảnh và không khóa thẻ.

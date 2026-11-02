@@ -19,6 +19,8 @@ Lựa chọn & Công việc & Tác động dữ liệu\\
 5 & Lịch sử & Chỉ đọc toàn bộ lượt.\\
 6 & Thống kê & Chỉ đọc và tính theo ngày yêu cầu.\\
 7 & Đổi sức chứa & Kiểm tra và lưu cấu hình mới.\\
+8 & Xử lý mất thẻ & Tra theo biển số; lưu thông tin sinh viên/chủ xe; thu phí thủ công.\\
+9 & Danh sách mất thẻ & Chỉ đọc các lượt đã xử lý mất thẻ.\\
 0 & Thoát & Không tạo thêm giao dịch.\\
 \bottomrule
 \end{tabularx}
@@ -58,10 +60,12 @@ Phương thức được khai báo \code{const} vì không đóng lượt hoặc
 
 Khi gọi \code{confirmCheckout()}, dịch vụ tra lại theo thẻ và thời gian ra, rồi so sánh mã lượt, biển số và giờ vào. Phí cùng ngày được lấy từ kết quả tính lại; số tiền do đối tượng báo giá mang đến không được tin ngay. Với lượt qua ngày, số tiền và lý do được kiểm tra trước khi ghi vào lượt dự kiến.
 
-Nhân viên xác nhận thu tiền trước khi dịch vụ lưu dữ liệu, nhưng thông báo cho xe ra chỉ xuất hiện sau khi lưu thành công. Nếu bước lưu thất bại, màn hình phải báo lỗi, xe vẫn ở trạng thái đang gửi trong phần mềm. Bản console chưa có quy trình đối soát tiền mặt cho trường hợp nhân viên đã nhận tiền nhưng lưu bị lỗi; đây là một điểm cần thiết kế thêm trước khi đưa vào vận hành thực tế.
+Nhân viên xác nhận thu tiền trước khi dịch vụ lưu dữ liệu, nhưng thông báo cho xe ra chỉ xuất hiện sau khi lưu thành công. Nếu bước lưu thất bại, màn hình báo lỗi và xe vẫn ở trạng thái đang gửi. Khi đó, khoản tiền nhân viên đã nhận cần được ghi nhận riêng.
+
+Khi mất thẻ, giao diện chuyển sang tra theo biển số. Dịch vụ tạo báo giá với cờ cần thu thủ công. Giao diện nhập thông tin sinh viên/chủ xe và phí, sau đó dịch vụ kiểm tra lại lượt, lưu và đóng. Thông tin sinh viên và chủ xe nằm trong \code{LostTicketInfo}.
 
 \section{Tệp dữ liệu và cách khôi phục}
-Lớp lưu trữ sử dụng tệp văn bản để nhóm dễ quan sát dữ liệu khi kiểm tra. Dòng đầu có phiên bản định dạng, sức chứa và mã lượt kế tiếp. Các dòng sau chứa từng lượt gửi. Cấu trúc này đủ cho ứng dụng một phiên, không yêu cầu cài thêm một hệ quản trị cơ sở dữ liệu.
+Lớp lưu trữ dùng tệp văn bản để nhóm dễ quan sát dữ liệu khi kiểm tra. Dòng đầu ghi sức chứa và mã lượt kế tiếp; các dòng sau chứa từng lượt gửi. Cấu trúc này đủ cho chương trình chạy trên một máy và không cần cài thêm hệ quản trị cơ sở dữ liệu.
 
 \begin{table}[H]
 \centering\small
@@ -77,8 +81,9 @@ Loại xe & 1 cho xe máy, 2 cho xe máy điện.\\
 Thời gian vào & Chuỗi ngày giờ có độ chính xác đến phút.\\
 Thời gian ra & Ngày giờ hợp lệ, hoặc \code{-} nếu đang gửi.\\
 Phí đã thu & Số nguyên không âm; lượt đang gửi có giá trị 0.\\
-Cờ thủ công & 0 hoặc 1; phải phù hợp với việc qua ngày.\\
+Cờ thủ công & 0 hoặc 1; lượt thường chỉ bật khi qua ngày, lượt mất thẻ luôn bật.\\
 Lý do & Chuỗi một dòng; bắt buộc khi thu thủ công.\\
+Thông tin mất thẻ & Cờ 0/1; nếu 1: mã SV/CCCD, họ tên SV, họ tên chủ xe, CCCD chủ xe, lớp, SĐT, ghi chú.\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -86,12 +91,13 @@ Lý do & Chuỗi một dòng; bắt buộc khi thu thủ công.\\
 Các chuỗi được ghi bằng \code{std::quoted}. Nhờ đó, lý do có dấu cách, dấu nháy hoặc dấu gạch chéo vẫn đọc lại đúng. Một bản dữ liệu minh họa có thể viết như sau:
 
 \begin{Code}
-PARKING_DATA_V1 100 3
-1 "C001" "29A112345" 1 "2026-10-26 08:00" "2026-10-26 17:00" 3000 0 ""
-2 "C002" "29M99999" 2 "2026-10-26 18:00" "-" 0 0 ""
+PARKING_DATA 100 3
+1 "C001" "29A112345" 1 "2026-10-26 08:00" "2026-10-26 17:00" 3000 0 "" 0 "" "" "" "" "" "" ""
+2 "C002" "29M99999" 2 "2026-10-26 18:00" "-" 0 0 "" 0 "" "" "" "" "" "" ""
+3 "C003" "29A577777" 1 "2026-10-27 08:00" "2026-10-27 17:00" 50000 1 "Mất thẻ" 1 "SV001" "Nguyen Van A" "Tran Van B" "" "" "" "Xe bo"
 \end{Code}
 
-Không thể chỉ đọc đủ trường rồi coi dữ liệu đã hợp lệ. Lớp lưu trữ kiểm tra phiên bản, dữ liệu dư, kiểu xe, ngày giờ, phí và cờ thủ công. Sau đó, khi tạo lại bãi, các mã lượt, thẻ và biển số đang gửi được kiểm tra trùng; số xe phải không vượt sức chứa. Phí của lượt cùng ngày cũng được tính lại để đối chiếu với giá trị lưu.
+Không thể chỉ đọc đủ trường rồi coi dữ liệu đã hợp lệ. Lớp lưu trữ kiểm tra tiêu đề, dữ liệu dư, kiểu xe, ngày giờ, phí, cờ thủ công và thông tin mất thẻ. Sau đó, khi tạo lại bãi, các mã lượt, thẻ và biển số đang gửi được kiểm tra trùng; số xe phải không vượt sức chứa. Phí của lượt cùng ngày cũng được tính lại để đối chiếu với giá trị lưu.
 
 Nếu chưa có tệp chính và chưa có bản sao lưu, chương trình hỏi sức chứa để tạo bãi mới. Nếu có tệp nhưng nội dung sai, chương trình dừng khởi động với thông báo lỗi. Hai trường hợp phải được tách rõ: tệp hỏng không có nghĩa là chưa từng có dữ liệu và không cho phép ghi một bãi trống đè lên lịch sử cũ.
 
@@ -104,7 +110,7 @@ Nếu chưa có tệp chính và chưa có bản sao lưu, chương trình hỏi
 
 Khi lưu, chương trình ghi toàn bộ trạng thái dự kiến vào \code{.tmp} và kiểm tra luồng sau khi ghi, đẩy dữ liệu, đóng tệp. Nếu có tệp chính, nó được chuyển sang \code{.bak} trước khi tệp tạm được đưa vào vị trí chính. Khi thay thế thất bại, chương trình cố đưa bản cũ trở lại. Sau khi tệp chính mới đã hoàn tất, lỗi dọn bản sao lưu không làm đảo kết quả giao dịch.
 
-Nếu tiến trình dừng đúng lúc tệp chính đã đổi tên nhưng tệp mới chưa vào vị trí, lần mở sau có thể đọc \code{.bak} khi thiếu tệp chính. Cơ chế này hỗ trợ tình huống gián đoạn đã mô phỏng, nhưng không phải cam kết phục hồi mọi lỗi mất điện. Chương trình chưa có khóa giữa nhiều tiến trình, nhật ký giao dịch hoặc cơ chế ép dữ liệu xuống thiết bị lưu trữ như một cơ sở dữ liệu.
+Nếu tiến trình dừng đúng lúc tệp chính đã đổi tên nhưng tệp mới chưa vào vị trí, lần mở sau có thể đọc \code{.bak} khi thiếu tệp chính. Cách này xử lý được tình huống gián đoạn đã mô phỏng, nhưng không bảo đảm phục hồi mọi lỗi mất điện. Chương trình chỉ dành cho một máy và một phiên làm việc.
 
 \section{Ngày giờ, tiền và thống kê}
 \code{DateTime} lưu năm, tháng, ngày, giờ và phút dưới dạng các giá trị số. Hàm tạo kiểm tra miền giá trị và số ngày của tháng, bao gồm quy tắc năm nhuận. Hàm phân tích chuỗi yêu cầu đúng dạng \code{YYYY-MM-DD HH:MM}; không chấp nhận một ngày sai rồi tự chuyển sang tháng sau.
@@ -113,7 +119,7 @@ Nếu tiến trình dừng đúng lúc tệp chính đã đổi tên nhưng tệ
 
 So sánh thời điểm dựa trên thứ tự năm, tháng, ngày, giờ, phút. Vì dữ liệu trong bài toán là giờ địa phương trên một máy, cách biểu diễn này thuận tiện cho việc so cùng ngày và so với 19:00. Chương trình chưa xử lý việc thay đổi múi giờ hoặc điều chỉnh đồng hồ giữa các cổng. Nếu đồng hồ dẫn đến giờ ra trước giờ vào, thao tác bị từ chối để nhân viên kiểm tra lại.
 
-Số tiền dùng \code{long long}; các mức phí tự động được trả về bằng số nguyên. Khi hiển thị, giao diện thêm dấu chấm phân cách hàng nghìn, nhưng tệp vẫn lưu số nguyên không có định dạng trang trí. Lý do thu thủ công được giới hạn trên một dòng, tối đa 500 byte UTF-8, để một bản ghi không bị tách thành nhiều dòng.
+Số tiền dùng \code{long long}; các mức phí tự động được trả về bằng số nguyên. Khi hiển thị, giao diện thêm dấu chấm phân cách hàng nghìn, nhưng tệp vẫn lưu số nguyên không có định dạng trang trí. Lý do thu thủ công được giới hạn trên một dòng, tối đa 500 byte UTF-8, để một bản ghi không bị tách thành nhiều dòng. Lượt mất thẻ dùng phí thủ công nên doanh thu vẫn được cộng theo ngày ra như các lượt đã trả khác.
 
 \section{Build và chạy chương trình}
 Chương trình dùng C++17 và thư viện chuẩn, đã build trên Windows bằng GCC 16.1.0. Chế độ thường dùng giờ máy; demo cho nhập giờ và dùng dữ liệu riêng. Từ \path{source_code/}, chạy:

@@ -18,8 +18,11 @@ public:
     std::size_t activeCount() const;
     const std::vector<ParkingSession>& getSessions() const;
     const ParkingSession& findActiveByCard(const std::string& cardId) const;
+    const ParkingSession& findActiveByPlate(const std::string& plate) const;
     long long recordEntry(const std::string& cardId, const Vehicle& vehicle, const DateTime& entry);
     void recordExit(long long id, const DateTime& exit, long long fee,
                     bool manual, const std::string& reason);
+    void recordLostTicketExit(long long id, const DateTime& exit, long long fee,
+                              const LostTicketInfo& info, const std::string& reason = "Mất thẻ");
     void changeCapacity(int capacity);
 };

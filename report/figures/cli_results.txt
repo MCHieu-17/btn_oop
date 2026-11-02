@@ -1,1 +1,1 @@
-﻿RESULT 4 CLI scenarios passed
+﻿RESULT 6 CLI scenarios passed
